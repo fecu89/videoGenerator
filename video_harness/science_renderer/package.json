@@ -1,0 +1,28 @@
+{
+  "name": "video-harness-science-renderer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest",
+    "typecheck": "tsc --noEmit",
+    "build": "esbuild src/browser.ts --bundle --format=iife --global-name=ScienceRendererBundle --outfile=dist/browser.js",
+    "render": "tsx src/cli.ts",
+    "render-overlay": "tsx src/overlay-frame.ts",
+    "benchmark-capture": "tsx src/capture-benchmark.ts"
+  },
+  "dependencies": {
+    "playwright": "1.62.1",
+    "three": "0.185.1"
+  },
+  "devDependencies": {
+    "@types/node": "26.2.0",
+    "@types/pngjs": "6.0.5",
+    "@types/three": "0.185.4",
+    "esbuild": "0.28.2",
+    "pngjs": "7.0.0",
+    "tsx": "4.23.12",
+    "typescript": "7.0.2",
+    "vitest": "4.1.11"
+  }
+}

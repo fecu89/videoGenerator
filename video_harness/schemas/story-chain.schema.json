@@ -1,0 +1,161 @@
+{
+  "$defs": {
+    "ChainPair": {
+      "additionalProperties": false,
+      "properties": {
+        "question": {
+          "$ref": "#/$defs/Quote"
+        },
+        "answer": {
+          "$ref": "#/$defs/Quote"
+        },
+        "resolves_question": {
+          "title": "Resolves Question",
+          "type": "boolean"
+        },
+        "answer_reason": {
+          "minLength": 12,
+          "title": "Answer Reason",
+          "type": "string"
+        },
+        "causes_next_question": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Causes Next Question"
+        },
+        "next_question_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Next Question Reason"
+        }
+      },
+      "required": [
+        "question",
+        "answer",
+        "resolves_question",
+        "answer_reason",
+        "causes_next_question",
+        "next_question_reason"
+      ],
+      "title": "ChainPair",
+      "type": "object"
+    },
+    "Quote": {
+      "additionalProperties": false,
+      "properties": {
+        "scene_id": {
+          "minimum": 1,
+          "title": "Scene Id",
+          "type": "integer"
+        },
+        "quote": {
+          "minLength": 2,
+          "title": "Quote",
+          "type": "string"
+        }
+      },
+      "required": [
+        "scene_id",
+        "quote"
+      ],
+      "title": "Quote",
+      "type": "object"
+    },
+    "SceneCoverage": {
+      "additionalProperties": false,
+      "properties": {
+        "scene_id": {
+          "minimum": 1,
+          "title": "Scene Id",
+          "type": "integer"
+        },
+        "role": {
+          "enum": [
+            "intro",
+            "chain",
+            "mechanism",
+            "closing"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "reason": {
+          "minLength": 8,
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "scene_id",
+        "role",
+        "reason"
+      ],
+      "title": "SceneCoverage",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "script_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Script Sha256",
+      "type": "string"
+    },
+    "reviewer": {
+      "minLength": 3,
+      "title": "Reviewer",
+      "type": "string"
+    },
+    "verdict": {
+      "enum": [
+        "passed",
+        "failed",
+        "pending"
+      ],
+      "title": "Verdict",
+      "type": "string"
+    },
+    "scene_coverage": {
+      "items": {
+        "$ref": "#/$defs/SceneCoverage"
+      },
+      "title": "Scene Coverage",
+      "type": "array"
+    },
+    "pairs": {
+      "items": {
+        "$ref": "#/$defs/ChainPair"
+      },
+      "minItems": 2,
+      "title": "Pairs",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "script_sha256",
+    "reviewer",
+    "verdict",
+    "scene_coverage",
+    "pairs"
+  ],
+  "title": "StoryChain",
+  "type": "object"
+}

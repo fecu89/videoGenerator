@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Science simulation configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "preset", "output", "physics", "style", "scenes"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "preset": {"const": "mars-retrograde"},
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height", "fps", "video_codec", "audio_codec"],
+      "properties": {
+        "width": {"type": "integer", "minimum": 1},
+        "height": {"type": "integer", "minimum": 1},
+        "fps": {"type": "integer", "minimum": 1},
+        "video_codec": {"const": "h264"},
+        "audio_codec": {"const": "aac"},
+        "scene_transition": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "duration_seconds", "fade_seconds"],
+          "properties": {
+            "mode": {"enum": ["cut", "dip_to_black"]},
+            "duration_seconds": {"type": "number", "minimum": 0},
+            "fade_seconds": {"type": "number", "minimum": 0}
+          }
+        }
+      }
+    },
+    "physics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model", "earth_period_days", "mars_period_days", "earth_orbit_radius", "mars_orbit_radius", "opposition_day"],
+      "properties": {
+        "model": {"const": "circular-teaching-model"},
+        "earth_period_days": {"type": "number", "exclusiveMinimum": 0},
+        "mars_period_days": {"type": "number", "exclusiveMinimum": 0},
+        "earth_orbit_radius": {"type": "number", "exclusiveMinimum": 0},
+        "mars_orbit_radius": {"type": "number", "exclusiveMinimum": 0},
+        "opposition_day": {"type": "number"}
+      }
+    },
+    "style": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["preset", "seed", "earth_scale", "mars_scale", "show_labels"],
+      "properties": {
+        "preset": {"const": "hybrid-space-explainer"},
+        "seed": {"type": "integer"},
+        "earth_scale": {"type": "number", "exclusiveMinimum": 0},
+        "mars_scale": {"type": "number", "exclusiveMinimum": 0},
+        "show_labels": {"type": "boolean"}
+      }
+    },
+    "scenes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["scene_id", "template", "simulation_day_start", "simulation_day_end", "camera"],
+        "properties": {
+          "scene_id": {"type": "integer", "minimum": 1},
+          "template": {
+            "enum": [
+              "sky-orbit-reveal",
+              "retrograde-track",
+              "moving-observer",
+              "sightline-angle",
+              "speed-comparison",
+              "earth-overtake",
+              "projection-proof",
+              "return-to-direct"
+            ]
+          },
+          "simulation_day_start": {"type": "number"},
+          "simulation_day_end": {"type": "number"},
+          "camera": {
+            "enum": [
+              "sky-to-orbit",
+              "fixed-sky",
+              "earth-pullback",
+              "orbit-three-quarter",
+              "orbit-top",
+              "earth-tracking",
+              "projection-three-quarter",
+              "orbit-to-sky"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

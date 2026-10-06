@@ -1,0 +1,233 @@
+{
+  "$defs": {
+    "ActorMapping": {
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "minLength": 1,
+          "title": "From",
+          "type": "string"
+        },
+        "to": {
+          "minLength": 1,
+          "title": "To",
+          "type": "string"
+        }
+      },
+      "required": [
+        "from",
+        "to"
+      ],
+      "title": "ActorMapping",
+      "type": "object"
+    },
+    "DirectionCheck": {
+      "additionalProperties": false,
+      "properties": {
+        "sequence_id": {
+          "title": "Sequence Id",
+          "type": "string"
+        },
+        "frame": {
+          "minimum": 0,
+          "title": "Frame",
+          "type": "integer"
+        },
+        "kind": {
+          "enum": [
+            "screen_direction",
+            "path_direction",
+            "screen_rotation"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "reason": {
+          "minLength": 10,
+          "title": "Reason",
+          "type": "string"
+        },
+        "vector": {
+          "anyOf": [
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Vector"
+        },
+        "start_frame": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Frame"
+        },
+        "actor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Actor"
+        },
+        "expected": {
+          "enum": [
+            "left",
+            "right",
+            "up",
+            "down",
+            "counterclockwise",
+            "clockwise"
+          ],
+          "title": "Expected",
+          "type": "string"
+        },
+        "path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Path"
+        }
+      },
+      "required": [
+        "sequence_id",
+        "frame",
+        "kind",
+        "reason",
+        "expected"
+      ],
+      "title": "DirectionCheck",
+      "type": "object"
+    },
+    "Transition": {
+      "additionalProperties": false,
+      "properties": {
+        "from_beat": {
+          "title": "From Beat",
+          "type": "string"
+        },
+        "to_beat": {
+          "title": "To Beat",
+          "type": "string"
+        },
+        "mode": {
+          "enum": [
+            "continuous_3d",
+            "match_cut",
+            "cut"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "reason": {
+          "minLength": 15,
+          "title": "Reason",
+          "type": "string"
+        },
+        "reviewed": {
+          "title": "Reviewed",
+          "type": "boolean"
+        },
+        "actors": {
+          "items": {
+            "$ref": "#/$defs/ActorMapping"
+          },
+          "title": "Actors",
+          "type": "array"
+        }
+      },
+      "required": [
+        "from_beat",
+        "to_beat",
+        "mode",
+        "reason",
+        "reviewed"
+      ],
+      "title": "Transition",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "local_sequence_plan_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Local Sequence Plan Sha256",
+      "type": "string"
+    },
+    "reviewer": {
+      "minLength": 3,
+      "title": "Reviewer",
+      "type": "string"
+    },
+    "verdict": {
+      "enum": [
+        "passed",
+        "failed",
+        "pending"
+      ],
+      "title": "Verdict",
+      "type": "string"
+    },
+    "transitions": {
+      "items": {
+        "$ref": "#/$defs/Transition"
+      },
+      "title": "Transitions",
+      "type": "array"
+    },
+    "direction_checks": {
+      "items": {
+        "$ref": "#/$defs/DirectionCheck"
+      },
+      "title": "Direction Checks",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "local_sequence_plan_sha256",
+    "reviewer",
+    "verdict",
+    "transitions"
+  ],
+  "title": "ContinuityPlan",
+  "type": "object"
+}

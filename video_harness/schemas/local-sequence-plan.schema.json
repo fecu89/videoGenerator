@@ -1,0 +1,325 @@
+{
+  "$defs": {
+    "LocalSequence": {
+      "additionalProperties": false,
+      "properties": {
+        "sequence_id": {
+          "pattern": "^SEQ\\d{2,}$",
+          "title": "Sequence Id",
+          "type": "string"
+        },
+        "renderer": {
+          "anyOf": [
+            {
+              "enum": [
+                "threejs",
+                "blender"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Renderer"
+        },
+        "scene_ids": {
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1,
+          "title": "Scene Ids",
+          "type": "array"
+        },
+        "duration_frames": {
+          "exclusiveMinimum": 0,
+          "title": "Duration Frames",
+          "type": "integer"
+        },
+        "render_mode": {
+          "const": "simulation",
+          "title": "Render Mode",
+          "type": "string"
+        },
+        "scene_graph": {
+          "minLength": 1,
+          "title": "Scene Graph",
+          "type": "string"
+        },
+        "scene_spans": {
+          "items": {
+            "$ref": "#/$defs/SceneSpan"
+          },
+          "minItems": 1,
+          "title": "Scene Spans",
+          "type": "array"
+        },
+        "timeline": {
+          "items": {
+            "$ref": "#/$defs/SequenceTimelineBeat"
+          },
+          "minItems": 1,
+          "title": "Timeline",
+          "type": "array"
+        }
+      },
+      "required": [
+        "sequence_id",
+        "scene_ids",
+        "duration_frames",
+        "render_mode",
+        "scene_graph",
+        "scene_spans",
+        "timeline"
+      ],
+      "title": "LocalSequence",
+      "type": "object"
+    },
+    "SceneSpan": {
+      "additionalProperties": false,
+      "properties": {
+        "scene_id": {
+          "minimum": 1,
+          "title": "Scene Id",
+          "type": "integer"
+        },
+        "start_frame": {
+          "minimum": 0,
+          "title": "Start Frame",
+          "type": "integer"
+        },
+        "end_frame": {
+          "exclusiveMinimum": 0,
+          "title": "End Frame",
+          "type": "integer"
+        },
+        "audio_start_frame": {
+          "minimum": 0,
+          "title": "Audio Start Frame",
+          "type": "integer"
+        },
+        "audio_end_frame": {
+          "exclusiveMinimum": 0,
+          "title": "Audio End Frame",
+          "type": "integer"
+        },
+        "tail_silence_frames": {
+          "minimum": 0,
+          "title": "Tail Silence Frames",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "scene_id",
+        "start_frame",
+        "end_frame",
+        "audio_start_frame",
+        "audio_end_frame",
+        "tail_silence_frames"
+      ],
+      "title": "SceneSpan",
+      "type": "object"
+    },
+    "SequenceDefaults": {
+      "additionalProperties": false,
+      "properties": {
+        "width": {
+          "exclusiveMinimum": 0,
+          "title": "Width",
+          "type": "integer"
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "title": "Height",
+          "type": "integer"
+        },
+        "fps": {
+          "exclusiveMinimum": 0,
+          "title": "Fps",
+          "type": "integer"
+        },
+        "min_scene_seconds": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min Scene Seconds"
+        },
+        "max_scene_seconds": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Scene Seconds"
+        },
+        "scene_gap_seconds": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Scene Gap Seconds"
+        }
+      },
+      "required": [
+        "width",
+        "height",
+        "fps"
+      ],
+      "title": "SequenceDefaults",
+      "type": "object"
+    },
+    "SequenceTimelineBeat": {
+      "additionalProperties": false,
+      "properties": {
+        "beat_id": {
+          "pattern": "^B\\d{2,}$",
+          "title": "Beat Id",
+          "type": "string"
+        },
+        "start_frame": {
+          "minimum": 0,
+          "title": "Start Frame",
+          "type": "integer"
+        },
+        "end_frame": {
+          "exclusiveMinimum": 0,
+          "title": "End Frame",
+          "type": "integer"
+        },
+        "simulation_time_start": {
+          "title": "Simulation Time Start",
+          "type": "number"
+        },
+        "simulation_time_end": {
+          "title": "Simulation Time End",
+          "type": "number"
+        },
+        "controller": {
+          "minLength": 1,
+          "title": "Controller",
+          "type": "string"
+        },
+        "patch_targets": {
+          "items": {
+            "enum": [
+              "simulation_clock",
+              "geometry",
+              "layers",
+              "entities",
+              "camera",
+              "hide_events"
+            ],
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Patch Targets",
+          "type": "array"
+        },
+        "priority": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Priority",
+          "type": "integer"
+        },
+        "controller_options": {
+          "additionalProperties": true,
+          "title": "Controller Options",
+          "type": "object"
+        },
+        "hold_intent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Hold Intent"
+        }
+      },
+      "required": [
+        "beat_id",
+        "start_frame",
+        "end_frame",
+        "simulation_time_start",
+        "simulation_time_end",
+        "controller",
+        "patch_targets"
+      ],
+      "title": "SequenceTimelineBeat",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "renderer": {
+      "default": "threejs",
+      "enum": [
+        "threejs",
+        "blender"
+      ],
+      "title": "Renderer",
+      "type": "string"
+    },
+    "script_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Script Sha256",
+      "type": "string"
+    },
+    "production_plan_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Production Plan Sha256",
+      "type": "string"
+    },
+    "defaults": {
+      "$ref": "#/$defs/SequenceDefaults"
+    },
+    "simulation_config_file": {
+      "default": "simulation.json",
+      "title": "Simulation Config File",
+      "type": "string"
+    },
+    "sequences": {
+      "items": {
+        "$ref": "#/$defs/LocalSequence"
+      },
+      "title": "Sequences",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "script_sha256",
+    "production_plan_sha256",
+    "defaults",
+    "sequences"
+  ],
+  "title": "LocalSequencePlan",
+  "type": "object"
+}

@@ -1,0 +1,501 @@
+{
+  "$defs": {
+    "LocalVideoSettings": {
+      "additionalProperties": false,
+      "properties": {
+        "min_scene_seconds": {
+          "default": 5.0,
+          "exclusiveMinimum": 0,
+          "title": "Min Scene Seconds",
+          "type": "number"
+        },
+        "max_scene_seconds": {
+          "default": 15.0,
+          "exclusiveMinimum": 0,
+          "title": "Max Scene Seconds",
+          "type": "number"
+        },
+        "scene_gap_seconds": {
+          "default": 0.65,
+          "minimum": 0,
+          "title": "Scene Gap Seconds",
+          "type": "number"
+        },
+        "camera_transition_seconds": {
+          "default": 0.35,
+          "maximum": 3,
+          "minimum": 0,
+          "title": "Camera Transition Seconds",
+          "type": "number"
+        },
+        "target_beat_min_seconds": {
+          "default": 0,
+          "maximum": 30,
+          "minimum": 0,
+          "title": "Target Beat Min Seconds",
+          "type": "number"
+        },
+        "target_beat_max_seconds": {
+          "default": 0,
+          "maximum": 30,
+          "minimum": 0,
+          "title": "Target Beat Max Seconds",
+          "type": "number"
+        },
+        "text_policy": {
+          "default": "legacy",
+          "enum": [
+            "legacy",
+            "keywords",
+            "subtitles"
+          ],
+          "title": "Text Policy",
+          "type": "string"
+        },
+        "subtitle_languages": {
+          "default": "",
+          "title": "Subtitle Languages",
+          "type": "string"
+        },
+        "localized_delivery": {
+          "default": "burned_videos",
+          "enum": [
+            "burned_videos",
+            "audio_tracks"
+          ],
+          "title": "Localized Delivery",
+          "type": "string"
+        }
+      },
+      "title": "LocalVideoSettings",
+      "type": "object"
+    },
+    "MusicSettings": {
+      "additionalProperties": false,
+      "properties": {
+        "file": {
+          "default": "",
+          "title": "File",
+          "type": "string"
+        },
+        "gain_db": {
+          "default": -12.0,
+          "maximum": 0,
+          "minimum": -40,
+          "title": "Gain Db",
+          "type": "number"
+        },
+        "duck_db": {
+          "default": -16.0,
+          "maximum": 0,
+          "minimum": -40,
+          "title": "Duck Db",
+          "type": "number"
+        },
+        "fade_seconds": {
+          "default": 1.2,
+          "maximum": 5,
+          "minimum": 0,
+          "title": "Fade Seconds",
+          "type": "number"
+        },
+        "loop_mode": {
+          "default": "loop",
+          "enum": [
+            "loop",
+            "once"
+          ],
+          "title": "Loop Mode",
+          "type": "string"
+        }
+      },
+      "title": "MusicSettings",
+      "type": "object"
+    },
+    "PacingSettings": {
+      "additionalProperties": false,
+      "properties": {
+        "preset": {
+          "default": "custom",
+          "enum": [
+            "custom",
+            "calm",
+            "standard",
+            "shorts"
+          ],
+          "title": "Preset",
+          "type": "string"
+        },
+        "version": {
+          "default": 1,
+          "enum": [
+            1,
+            2
+          ],
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "title": "PacingSettings",
+      "type": "object"
+    },
+    "PipelineSettings": {
+      "additionalProperties": false,
+      "properties": {
+        "output_mode": {
+          "default": "all",
+          "enum": [
+            "all",
+            "video_only",
+            "prompts_only"
+          ],
+          "title": "Output Mode",
+          "type": "string"
+        },
+        "variant_mode": {
+          "default": "four",
+          "enum": [
+            "four",
+            "balanced_only"
+          ],
+          "title": "Variant Mode",
+          "type": "string"
+        }
+      },
+      "title": "PipelineSettings",
+      "type": "object"
+    },
+    "QaSettings": {
+      "additionalProperties": false,
+      "properties": {
+        "max_undeclared_freeze_seconds": {
+          "default": 2.0,
+          "exclusiveMinimum": 0,
+          "title": "Max Undeclared Freeze Seconds",
+          "type": "number"
+        },
+        "black_frame_amount_percent": {
+          "default": 99.9,
+          "exclusiveMinimum": 0,
+          "maximum": 100,
+          "title": "Black Frame Amount Percent",
+          "type": "number"
+        },
+        "black_frame_threshold": {
+          "default": 17,
+          "maximum": 255,
+          "minimum": 0,
+          "title": "Black Frame Threshold",
+          "type": "integer"
+        },
+        "audio_packet_tolerance_seconds": {
+          "default": 0.05,
+          "minimum": 0,
+          "title": "Audio Packet Tolerance Seconds",
+          "type": "number"
+        },
+        "duration_tolerance_seconds": {
+          "default": 0.05,
+          "minimum": 0,
+          "title": "Duration Tolerance Seconds",
+          "type": "number"
+        }
+      },
+      "title": "QaSettings",
+      "type": "object"
+    },
+    "RenderSettings": {
+      "additionalProperties": false,
+      "properties": {
+        "final_width": {
+          "default": 1920,
+          "exclusiveMinimum": 0,
+          "title": "Final Width",
+          "type": "integer"
+        },
+        "final_height": {
+          "default": 1080,
+          "exclusiveMinimum": 0,
+          "title": "Final Height",
+          "type": "integer"
+        },
+        "final_fps": {
+          "default": 30,
+          "exclusiveMinimum": 0,
+          "title": "Final Fps",
+          "type": "integer"
+        },
+        "x264_preset": {
+          "default": "medium",
+          "title": "X264 Preset",
+          "type": "string"
+        },
+        "x264_crf": {
+          "default": 18,
+          "maximum": 51,
+          "minimum": 0,
+          "title": "X264 Crf",
+          "type": "integer"
+        }
+      },
+      "title": "RenderSettings",
+      "type": "object"
+    },
+    "VoiceSettings": {
+      "additionalProperties": false,
+      "properties": {
+        "engine": {
+          "default": "qwen3",
+          "enum": [
+            "qwen3",
+            "kokoro"
+          ],
+          "title": "Engine",
+          "type": "string"
+        },
+        "model_id": {
+          "default": "mlx-community/Qwen3-TTS-12Hz-1.7B-CustomVoice-8bit",
+          "minLength": 1,
+          "title": "Model Id",
+          "type": "string"
+        },
+        "model_revision": {
+          "default": "41d3337e8b7f2843a75841595fc14e4b9a7a4b96",
+          "pattern": "^[0-9a-f]{40}$",
+          "title": "Model Revision",
+          "type": "string"
+        },
+        "speaker": {
+          "default": "Sohee",
+          "minLength": 1,
+          "title": "Speaker",
+          "type": "string"
+        },
+        "language": {
+          "default": "Korean",
+          "minLength": 1,
+          "title": "Language",
+          "type": "string"
+        },
+        "instructions_file": {
+          "default": "video_harness/agent/prompts/voice-sohee-ko.txt",
+          "minLength": 1,
+          "title": "Instructions File",
+          "type": "string"
+        },
+        "generation_preset": {
+          "default": "consistent",
+          "enum": [
+            "consistent",
+            "custom"
+          ],
+          "title": "Generation Preset",
+          "type": "string"
+        },
+        "temperature": {
+          "default": 0.5,
+          "exclusiveMinimum": 0,
+          "title": "Temperature",
+          "type": "number"
+        },
+        "top_k": {
+          "default": 30,
+          "minimum": 1,
+          "title": "Top K",
+          "type": "integer"
+        },
+        "top_p": {
+          "default": 1.0,
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Top P",
+          "type": "number"
+        },
+        "repetition_penalty": {
+          "default": 1.05,
+          "exclusiveMinimum": 0,
+          "title": "Repetition Penalty",
+          "type": "number"
+        },
+        "emotion_mode": {
+          "default": "off",
+          "enum": [
+            "script_only",
+            "off"
+          ],
+          "title": "Emotion Mode",
+          "type": "string"
+        },
+        "speaking_rate": {
+          "default": 1.0,
+          "maximum": 1.25,
+          "minimum": 0.8,
+          "title": "Speaking Rate",
+          "type": "number"
+        },
+        "max_tempo_factor": {
+          "default": 1.25,
+          "maximum": 1.6,
+          "minimum": 1.0,
+          "title": "Max Tempo Factor",
+          "type": "number"
+        },
+        "target_syllables_per_second": {
+          "default": 5.2,
+          "maximum": 7.0,
+          "minimum": 4.0,
+          "title": "Target Syllables Per Second",
+          "type": "number"
+        },
+        "loudness_mode": {
+          "default": "leveled",
+          "enum": [
+            "off",
+            "leveled"
+          ],
+          "title": "Loudness Mode",
+          "type": "string"
+        },
+        "loudness_target_lufs": {
+          "default": -18.0,
+          "maximum": -12,
+          "minimum": -30,
+          "title": "Loudness Target Lufs",
+          "type": "number"
+        },
+        "loudness_range_lu": {
+          "default": 5.0,
+          "maximum": 20,
+          "minimum": 3,
+          "title": "Loudness Range Lu",
+          "type": "number"
+        },
+        "loudness_true_peak_db": {
+          "default": -1.5,
+          "maximum": -0.5,
+          "minimum": -6,
+          "title": "Loudness True Peak Db",
+          "type": "number"
+        },
+        "max_internal_pause_ms": {
+          "default": 350,
+          "maximum": 800,
+          "minimum": 50,
+          "title": "Max Internal Pause Ms",
+          "type": "integer"
+        },
+        "pause_mode": {
+          "default": "legacy",
+          "enum": [
+            "legacy",
+            "typed"
+          ],
+          "title": "Pause Mode",
+          "type": "string"
+        },
+        "comma_pause_ms": {
+          "default": 120,
+          "maximum": 150,
+          "minimum": 80,
+          "title": "Comma Pause Ms",
+          "type": "integer"
+        },
+        "semantic_pause_ms": {
+          "default": 200,
+          "maximum": 250,
+          "minimum": 150,
+          "title": "Semantic Pause Ms",
+          "type": "integer"
+        },
+        "emphasis_pause_ms": {
+          "default": 350,
+          "maximum": 400,
+          "minimum": 300,
+          "title": "Emphasis Pause Ms",
+          "type": "integer"
+        },
+        "sentence_pause_ms": {
+          "default": 500,
+          "maximum": 600,
+          "minimum": 400,
+          "title": "Sentence Pause Ms",
+          "type": "integer"
+        },
+        "sentence_leading_margin_ms": {
+          "default": 100,
+          "maximum": 300,
+          "minimum": 0,
+          "title": "Sentence Leading Margin Ms",
+          "type": "integer"
+        },
+        "sentence_trailing_margin_ms": {
+          "default": 950,
+          "maximum": 1500,
+          "minimum": 200,
+          "title": "Sentence Trailing Margin Ms",
+          "type": "integer"
+        },
+        "max_tokens": {
+          "default": 4096,
+          "maximum": 32768,
+          "minimum": 1,
+          "title": "Max Tokens",
+          "type": "integer"
+        },
+        "seed": {
+          "default": 20260828,
+          "maximum": 4294967295,
+          "minimum": 0,
+          "title": "Seed",
+          "type": "integer"
+        },
+        "min_scene_seconds": {
+          "default": 5.0,
+          "exclusiveMinimum": 0,
+          "title": "Min Scene Seconds",
+          "type": "number"
+        },
+        "max_scene_seconds": {
+          "default": 14.0,
+          "exclusiveMinimum": 0,
+          "title": "Max Scene Seconds",
+          "type": "number"
+        }
+      },
+      "title": "VoiceSettings",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 6,
+      "default": 6,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "pacing": {
+      "$ref": "#/$defs/PacingSettings"
+    },
+    "pipeline": {
+      "$ref": "#/$defs/PipelineSettings"
+    },
+    "voice": {
+      "$ref": "#/$defs/VoiceSettings"
+    },
+    "local_video": {
+      "$ref": "#/$defs/LocalVideoSettings"
+    },
+    "render": {
+      "$ref": "#/$defs/RenderSettings"
+    },
+    "qa": {
+      "$ref": "#/$defs/QaSettings"
+    },
+    "music": {
+      "$ref": "#/$defs/MusicSettings"
+    }
+  },
+  "title": "HarnessSettings",
+  "type": "object"
+}

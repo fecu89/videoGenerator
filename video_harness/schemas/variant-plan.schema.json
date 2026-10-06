@@ -1,0 +1,1821 @@
+{
+  "$defs": {
+    "AlternateShot": {
+      "additionalProperties": false,
+      "properties": {
+        "scene_id": {
+          "minimum": 1,
+          "title": "Scene Id",
+          "type": "integer"
+        },
+        "shot": {
+          "discriminator": {
+            "mapping": {
+              "composite": "#/$defs/CompositeShot",
+              "generated": "#/$defs/GeneratedShot",
+              "simulation": "#/$defs/SimulationShot",
+              "still_motion": "#/$defs/StillMotionShot"
+            },
+            "propertyName": "render_mode"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/GeneratedShot"
+            },
+            {
+              "$ref": "#/$defs/SimulationShot"
+            },
+            {
+              "$ref": "#/$defs/CompositeShot"
+            },
+            {
+              "$ref": "#/$defs/StillMotionShot"
+            }
+          ],
+          "title": "Shot"
+        }
+      },
+      "required": [
+        "scene_id",
+        "shot"
+      ],
+      "title": "AlternateShot",
+      "type": "object"
+    },
+    "AssetRefs": {
+      "additionalProperties": false,
+      "properties": {
+        "start_image": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Image"
+        },
+        "end_image": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "End Image"
+        },
+        "reference_images": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reference Images",
+          "type": "array"
+        },
+        "background": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Background"
+        },
+        "mask": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mask"
+        }
+      },
+      "title": "AssetRefs",
+      "type": "object"
+    },
+    "CameraContract": {
+      "additionalProperties": false,
+      "properties": {
+        "projection": {
+          "enum": [
+            "perspective",
+            "orthographic"
+          ],
+          "title": "Projection",
+          "type": "string"
+        },
+        "framing": {
+          "minLength": 1,
+          "title": "Framing",
+          "type": "string"
+        },
+        "movement": {
+          "minLength": 1,
+          "title": "Movement",
+          "type": "string"
+        },
+        "position": {
+          "anyOf": [
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Position"
+        },
+        "target": {
+          "anyOf": [
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target"
+        },
+        "orientation_convention": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Orientation Convention"
+        },
+        "screen_direction_convention": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Screen Direction Convention"
+        },
+        "start": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EntityState"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "end": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EntityState"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "projection",
+        "framing",
+        "movement"
+      ],
+      "title": "CameraContract",
+      "type": "object"
+    },
+    "CompositeBase": {
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": [
+            "generated",
+            "still_motion"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "generation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GenerationContract"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "still_motion": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StillMotionContract"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "mode"
+      ],
+      "title": "CompositeBase",
+      "type": "object"
+    },
+    "CompositeShot": {
+      "additionalProperties": false,
+      "properties": {
+        "shot_id": {
+          "pattern": "^\\d{2,}[A-Z]$",
+          "title": "Shot Id",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "duration_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "Duration Seconds",
+          "type": "number"
+        },
+        "render_mode": {
+          "const": "composite",
+          "title": "Render Mode",
+          "type": "string"
+        },
+        "purpose": {
+          "minLength": 1,
+          "title": "Purpose",
+          "type": "string"
+        },
+        "single_event": {
+          "minLength": 1,
+          "title": "Single Event",
+          "type": "string"
+        },
+        "coordinate_space": {
+          "$ref": "#/$defs/CoordinateSpace"
+        },
+        "entities": {
+          "items": {
+            "$ref": "#/$defs/EntitySpec"
+          },
+          "title": "Entities",
+          "type": "array"
+        },
+        "paths": {
+          "items": {
+            "$ref": "#/$defs/PathSpec"
+          },
+          "title": "Paths",
+          "type": "array"
+        },
+        "start_state": {
+          "$ref": "#/$defs/TimedState"
+        },
+        "end_state": {
+          "$ref": "#/$defs/TimedState"
+        },
+        "invariants": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Invariants",
+          "type": "array"
+        },
+        "motion_contract": {
+          "$ref": "#/$defs/MotionContract"
+        },
+        "camera": {
+          "$ref": "#/$defs/CameraContract"
+        },
+        "assets": {
+          "$ref": "#/$defs/AssetRefs"
+        },
+        "relationships": {
+          "items": {
+            "$ref": "#/$defs/RelationshipSpec"
+          },
+          "title": "Relationships",
+          "type": "array"
+        },
+        "dependencies": {
+          "items": {
+            "$ref": "#/$defs/ShotDependency"
+          },
+          "title": "Dependencies",
+          "type": "array"
+        },
+        "excluded_elements": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Excluded Elements",
+          "type": "array"
+        },
+        "base": {
+          "$ref": "#/$defs/CompositeBase"
+        },
+        "overlays": {
+          "items": {
+            "$ref": "#/$defs/OverlayContract"
+          },
+          "minItems": 1,
+          "title": "Overlays",
+          "type": "array"
+        }
+      },
+      "required": [
+        "shot_id",
+        "title",
+        "duration_seconds",
+        "render_mode",
+        "purpose",
+        "single_event",
+        "coordinate_space",
+        "start_state",
+        "end_state",
+        "invariants",
+        "motion_contract",
+        "camera",
+        "base",
+        "overlays"
+      ],
+      "title": "CompositeShot",
+      "type": "object"
+    },
+    "CoordinateSpace": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "enum": [
+            "world_3d",
+            "image_normalized",
+            "semantic"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "frame_id": {
+          "minLength": 1,
+          "title": "Frame Id",
+          "type": "string"
+        },
+        "origin": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Origin"
+        },
+        "positive_x": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Positive X"
+        },
+        "positive_y": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Positive Y"
+        },
+        "positive_z": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Positive Z"
+        },
+        "screen_convention": {
+          "minLength": 1,
+          "title": "Screen Convention",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "frame_id",
+        "screen_convention"
+      ],
+      "title": "CoordinateSpace",
+      "type": "object"
+    },
+    "EntitySpec": {
+      "additionalProperties": false,
+      "properties": {
+        "entity_id": {
+          "minLength": 1,
+          "title": "Entity Id",
+          "type": "string"
+        },
+        "anchor": {
+          "minLength": 1,
+          "title": "Anchor",
+          "type": "string"
+        },
+        "identity_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Identity Ref"
+        },
+        "path_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Path Id"
+        }
+      },
+      "required": [
+        "entity_id",
+        "anchor"
+      ],
+      "title": "EntitySpec",
+      "type": "object"
+    },
+    "EntityState": {
+      "additionalProperties": false,
+      "properties": {
+        "center": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Center"
+        },
+        "scale": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Scale"
+        },
+        "rotation_degrees": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rotation Degrees"
+        },
+        "visible": {
+          "default": true,
+          "title": "Visible",
+          "type": "boolean"
+        }
+      },
+      "title": "EntityState",
+      "type": "object"
+    },
+    "GeneratedShot": {
+      "additionalProperties": false,
+      "properties": {
+        "shot_id": {
+          "pattern": "^\\d{2,}[A-Z]$",
+          "title": "Shot Id",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "duration_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "Duration Seconds",
+          "type": "number"
+        },
+        "render_mode": {
+          "const": "generated",
+          "title": "Render Mode",
+          "type": "string"
+        },
+        "purpose": {
+          "minLength": 1,
+          "title": "Purpose",
+          "type": "string"
+        },
+        "single_event": {
+          "minLength": 1,
+          "title": "Single Event",
+          "type": "string"
+        },
+        "coordinate_space": {
+          "$ref": "#/$defs/CoordinateSpace"
+        },
+        "entities": {
+          "items": {
+            "$ref": "#/$defs/EntitySpec"
+          },
+          "title": "Entities",
+          "type": "array"
+        },
+        "paths": {
+          "items": {
+            "$ref": "#/$defs/PathSpec"
+          },
+          "title": "Paths",
+          "type": "array"
+        },
+        "start_state": {
+          "$ref": "#/$defs/TimedState"
+        },
+        "end_state": {
+          "$ref": "#/$defs/TimedState"
+        },
+        "invariants": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Invariants",
+          "type": "array"
+        },
+        "motion_contract": {
+          "$ref": "#/$defs/MotionContract"
+        },
+        "camera": {
+          "$ref": "#/$defs/CameraContract"
+        },
+        "assets": {
+          "$ref": "#/$defs/AssetRefs"
+        },
+        "relationships": {
+          "items": {
+            "$ref": "#/$defs/RelationshipSpec"
+          },
+          "title": "Relationships",
+          "type": "array"
+        },
+        "dependencies": {
+          "items": {
+            "$ref": "#/$defs/ShotDependency"
+          },
+          "title": "Dependencies",
+          "type": "array"
+        },
+        "excluded_elements": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Excluded Elements",
+          "type": "array"
+        },
+        "generation": {
+          "$ref": "#/$defs/GenerationContract"
+        }
+      },
+      "required": [
+        "shot_id",
+        "title",
+        "duration_seconds",
+        "render_mode",
+        "purpose",
+        "single_event",
+        "coordinate_space",
+        "start_state",
+        "end_state",
+        "invariants",
+        "motion_contract",
+        "camera",
+        "generation"
+      ],
+      "title": "GeneratedShot",
+      "type": "object"
+    },
+    "GenerationContract": {
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": [
+            "t2v",
+            "i2v",
+            "first_last"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "prompt_file": {
+          "minLength": 1,
+          "title": "Prompt File",
+          "type": "string"
+        },
+        "inbox_file": {
+          "minLength": 1,
+          "title": "Inbox File",
+          "type": "string"
+        }
+      },
+      "required": [
+        "mode",
+        "prompt_file",
+        "inbox_file"
+      ],
+      "title": "GenerationContract",
+      "type": "object"
+    },
+    "MotionContract": {
+      "additionalProperties": false,
+      "properties": {
+        "primary_event": {
+          "minLength": 1,
+          "title": "Primary Event",
+          "type": "string"
+        },
+        "tracks": {
+          "items": {
+            "$ref": "#/$defs/MotionTrack"
+          },
+          "title": "Tracks",
+          "type": "array"
+        }
+      },
+      "required": [
+        "primary_event"
+      ],
+      "title": "MotionContract",
+      "type": "object"
+    },
+    "MotionKeyframe": {
+      "additionalProperties": false,
+      "properties": {
+        "at_seconds": {
+          "minimum": 0,
+          "title": "At Seconds",
+          "type": "number"
+        },
+        "center": {
+          "default": [
+            0.5,
+            0.5
+          ],
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Center",
+          "type": "array"
+        },
+        "scale": {
+          "default": 1.0,
+          "exclusiveMinimum": 0,
+          "title": "Scale",
+          "type": "number"
+        },
+        "rotation_degrees": {
+          "default": 0.0,
+          "title": "Rotation Degrees",
+          "type": "number"
+        },
+        "opacity": {
+          "default": 1.0,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Opacity",
+          "type": "number"
+        }
+      },
+      "required": [
+        "at_seconds"
+      ],
+      "title": "MotionKeyframe",
+      "type": "object"
+    },
+    "MotionTrack": {
+      "additionalProperties": false,
+      "properties": {
+        "entity_id": {
+          "minLength": 1,
+          "title": "Entity Id",
+          "type": "string"
+        },
+        "path_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Path Id"
+        },
+        "direction": {
+          "enum": [
+            "clockwise",
+            "counterclockwise",
+            "left",
+            "right",
+            "static",
+            "custom"
+          ],
+          "title": "Direction",
+          "type": "string"
+        },
+        "rate_profile": {
+          "enum": [
+            "uniform",
+            "linear",
+            "keyframed",
+            "physics"
+          ],
+          "title": "Rate Profile",
+          "type": "string"
+        },
+        "rate_source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rate Source"
+        },
+        "start": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EntityState"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "end": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EntityState"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "entity_id",
+        "direction",
+        "rate_profile"
+      ],
+      "title": "MotionTrack",
+      "type": "object"
+    },
+    "OverlayContract": {
+      "additionalProperties": false,
+      "properties": {
+        "overlay_id": {
+          "minLength": 1,
+          "title": "Overlay Id",
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "line",
+            "circle",
+            "polyline",
+            "screen_anchor"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "relationship_id": {
+          "minLength": 1,
+          "title": "Relationship Id",
+          "type": "string"
+        },
+        "style": {
+          "additionalProperties": true,
+          "title": "Style",
+          "type": "object"
+        },
+        "keyframes": {
+          "items": {
+            "$ref": "#/$defs/OverlayKeyframe"
+          },
+          "minItems": 1,
+          "title": "Keyframes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "overlay_id",
+        "type",
+        "relationship_id",
+        "keyframes"
+      ],
+      "title": "OverlayContract",
+      "type": "object"
+    },
+    "OverlayKeyframe": {
+      "additionalProperties": false,
+      "properties": {
+        "at_seconds": {
+          "minimum": 0,
+          "title": "At Seconds",
+          "type": "number"
+        },
+        "points": {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "minItems": 1,
+          "title": "Points",
+          "type": "array"
+        }
+      },
+      "required": [
+        "at_seconds",
+        "points"
+      ],
+      "title": "OverlayKeyframe",
+      "type": "object"
+    },
+    "PathSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "path_id": {
+          "minLength": 1,
+          "title": "Path Id",
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "circle",
+            "line",
+            "polyline",
+            "custom"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "center": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Center"
+        },
+        "radius": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Radius"
+        },
+        "plane": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Plane"
+        },
+        "points": {
+          "items": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Points",
+          "type": "array"
+        }
+      },
+      "required": [
+        "path_id",
+        "type"
+      ],
+      "title": "PathSpec",
+      "type": "object"
+    },
+    "RelationshipSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "relationship_id": {
+          "minLength": 1,
+          "title": "Relationship Id",
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "attached_line",
+            "fixed_distance",
+            "path_membership",
+            "projection_intersection",
+            "occlusion_alignment",
+            "screen_anchor",
+            "relative_placement"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "owner": {
+          "enum": [
+            "simulation",
+            "deterministic_overlay",
+            "reference_frame",
+            "generated_model"
+          ],
+          "title": "Owner",
+          "type": "string"
+        },
+        "entity_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Entity Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "relationship_id",
+        "type",
+        "owner",
+        "entity_ids"
+      ],
+      "title": "RelationshipSpec",
+      "type": "object"
+    },
+    "SequenceVariantOverride": {
+      "additionalProperties": false,
+      "properties": {
+        "sequence_id": {
+          "pattern": "^SEQ\\d{2,}$",
+          "title": "Sequence Id",
+          "type": "string"
+        },
+        "camera_profile": {
+          "default": "base",
+          "enum": [
+            "base",
+            "wide",
+            "close",
+            "restrained"
+          ],
+          "title": "Camera Profile",
+          "type": "string"
+        },
+        "layer_timing_profile": {
+          "default": "base",
+          "enum": [
+            "base",
+            "explain",
+            "dynamic"
+          ],
+          "title": "Layer Timing Profile",
+          "type": "string"
+        },
+        "lighting_profile": {
+          "default": "base",
+          "enum": [
+            "base",
+            "clear",
+            "cinematic"
+          ],
+          "title": "Lighting Profile",
+          "type": "string"
+        },
+        "scale_profile": {
+          "default": "base",
+          "enum": [
+            "base",
+            "emphasis"
+          ],
+          "title": "Scale Profile",
+          "type": "string"
+        }
+      },
+      "required": [
+        "sequence_id"
+      ],
+      "title": "SequenceVariantOverride",
+      "type": "object"
+    },
+    "SequenceVariantPlan": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 2,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "production_plan_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Production Plan Sha256",
+          "type": "string"
+        },
+        "local_sequence_plan_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Local Sequence Plan Sha256",
+          "type": "string"
+        },
+        "script_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Script Sha256",
+          "type": "string"
+        },
+        "variants": {
+          "items": {
+            "$ref": "#/$defs/SequenceVariantRecipe"
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "title": "Variants",
+          "type": "array"
+        },
+        "default_variant_id": {
+          "const": "balanced",
+          "default": "balanced",
+          "title": "Default Variant Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "production_plan_sha256",
+        "local_sequence_plan_sha256",
+        "script_sha256",
+        "variants"
+      ],
+      "title": "SequenceVariantPlan",
+      "type": "object"
+    },
+    "SequenceVariantRecipe": {
+      "additionalProperties": false,
+      "properties": {
+        "variant_id": {
+          "enum": [
+            "balanced",
+            "explain",
+            "dynamic",
+            "cinematic"
+          ],
+          "title": "Variant Id",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 40,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "sequence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Sequence Ids",
+          "type": "array"
+        },
+        "overrides": {
+          "items": {
+            "$ref": "#/$defs/SequenceVariantOverride"
+          },
+          "title": "Overrides",
+          "type": "array"
+        }
+      },
+      "required": [
+        "variant_id",
+        "label",
+        "sequence_ids"
+      ],
+      "title": "SequenceVariantRecipe",
+      "type": "object"
+    },
+    "ShotDependency": {
+      "additionalProperties": false,
+      "properties": {
+        "shot_id": {
+          "pattern": "^\\d{2,}[A-Z]$",
+          "title": "Shot Id",
+          "type": "string"
+        },
+        "artifact": {
+          "enum": [
+            "final_frame",
+            "mask",
+            "tracked_anchors"
+          ],
+          "title": "Artifact",
+          "type": "string"
+        }
+      },
+      "required": [
+        "shot_id",
+        "artifact"
+      ],
+      "title": "ShotDependency",
+      "type": "object"
+    },
+    "SimulationContract": {
+      "additionalProperties": false,
+      "properties": {
+        "model": {
+          "minLength": 1,
+          "title": "Model",
+          "type": "string"
+        },
+        "template": {
+          "minLength": 1,
+          "title": "Template",
+          "type": "string"
+        },
+        "parameters": {
+          "additionalProperties": true,
+          "title": "Parameters",
+          "type": "object"
+        },
+        "renderer_options": {
+          "additionalProperties": true,
+          "title": "Renderer Options",
+          "type": "object"
+        }
+      },
+      "required": [
+        "model",
+        "template"
+      ],
+      "title": "SimulationContract",
+      "type": "object"
+    },
+    "SimulationShot": {
+      "additionalProperties": false,
+      "properties": {
+        "shot_id": {
+          "pattern": "^\\d{2,}[A-Z]$",
+          "title": "Shot Id",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "duration_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "Duration Seconds",
+          "type": "number"
+        },
+        "render_mode": {
+          "const": "simulation",
+          "title": "Render Mode",
+          "type": "string"
+        },
+        "purpose": {
+          "minLength": 1,
+          "title": "Purpose",
+          "type": "string"
+        },
+        "single_event": {
+          "minLength": 1,
+          "title": "Single Event",
+          "type": "string"
+        },
+        "coordinate_space": {
+          "$ref": "#/$defs/CoordinateSpace"
+        },
+        "entities": {
+          "items": {
+            "$ref": "#/$defs/EntitySpec"
+          },
+          "title": "Entities",
+          "type": "array"
+        },
+        "paths": {
+          "items": {
+            "$ref": "#/$defs/PathSpec"
+          },
+          "title": "Paths",
+          "type": "array"
+        },
+        "start_state": {
+          "$ref": "#/$defs/TimedState"
+        },
+        "end_state": {
+          "$ref": "#/$defs/TimedState"
+        },
+        "invariants": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Invariants",
+          "type": "array"
+        },
+        "motion_contract": {
+          "$ref": "#/$defs/MotionContract"
+        },
+        "camera": {
+          "$ref": "#/$defs/CameraContract"
+        },
+        "assets": {
+          "$ref": "#/$defs/AssetRefs"
+        },
+        "relationships": {
+          "items": {
+            "$ref": "#/$defs/RelationshipSpec"
+          },
+          "title": "Relationships",
+          "type": "array"
+        },
+        "dependencies": {
+          "items": {
+            "$ref": "#/$defs/ShotDependency"
+          },
+          "title": "Dependencies",
+          "type": "array"
+        },
+        "excluded_elements": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Excluded Elements",
+          "type": "array"
+        },
+        "simulation": {
+          "$ref": "#/$defs/SimulationContract"
+        }
+      },
+      "required": [
+        "shot_id",
+        "title",
+        "duration_seconds",
+        "render_mode",
+        "purpose",
+        "single_event",
+        "coordinate_space",
+        "start_state",
+        "end_state",
+        "invariants",
+        "motion_contract",
+        "camera",
+        "simulation"
+      ],
+      "title": "SimulationShot",
+      "type": "object"
+    },
+    "StillLayer": {
+      "additionalProperties": false,
+      "properties": {
+        "layer_id": {
+          "minLength": 1,
+          "title": "Layer Id",
+          "type": "string"
+        },
+        "source_image": {
+          "minLength": 1,
+          "title": "Source Image",
+          "type": "string"
+        },
+        "mask": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mask"
+        },
+        "z_index": {
+          "default": 0,
+          "title": "Z Index",
+          "type": "integer"
+        },
+        "keyframes": {
+          "items": {
+            "$ref": "#/$defs/MotionKeyframe"
+          },
+          "minItems": 2,
+          "title": "Keyframes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "layer_id",
+        "source_image",
+        "keyframes"
+      ],
+      "title": "StillLayer",
+      "type": "object"
+    },
+    "StillMotionContract": {
+      "additionalProperties": false,
+      "properties": {
+        "source_image": {
+          "minLength": 1,
+          "title": "Source Image",
+          "type": "string"
+        },
+        "camera_keyframes": {
+          "items": {
+            "$ref": "#/$defs/MotionKeyframe"
+          },
+          "title": "Camera Keyframes",
+          "type": "array"
+        },
+        "layers": {
+          "items": {
+            "$ref": "#/$defs/StillLayer"
+          },
+          "title": "Layers",
+          "type": "array"
+        }
+      },
+      "required": [
+        "source_image"
+      ],
+      "title": "StillMotionContract",
+      "type": "object"
+    },
+    "StillMotionShot": {
+      "additionalProperties": false,
+      "properties": {
+        "shot_id": {
+          "pattern": "^\\d{2,}[A-Z]$",
+          "title": "Shot Id",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "duration_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "Duration Seconds",
+          "type": "number"
+        },
+        "render_mode": {
+          "const": "still_motion",
+          "title": "Render Mode",
+          "type": "string"
+        },
+        "purpose": {
+          "minLength": 1,
+          "title": "Purpose",
+          "type": "string"
+        },
+        "single_event": {
+          "minLength": 1,
+          "title": "Single Event",
+          "type": "string"
+        },
+        "coordinate_space": {
+          "$ref": "#/$defs/CoordinateSpace"
+        },
+        "entities": {
+          "items": {
+            "$ref": "#/$defs/EntitySpec"
+          },
+          "title": "Entities",
+          "type": "array"
+        },
+        "paths": {
+          "items": {
+            "$ref": "#/$defs/PathSpec"
+          },
+          "title": "Paths",
+          "type": "array"
+        },
+        "start_state": {
+          "$ref": "#/$defs/TimedState"
+        },
+        "end_state": {
+          "$ref": "#/$defs/TimedState"
+        },
+        "invariants": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Invariants",
+          "type": "array"
+        },
+        "motion_contract": {
+          "$ref": "#/$defs/MotionContract"
+        },
+        "camera": {
+          "$ref": "#/$defs/CameraContract"
+        },
+        "assets": {
+          "$ref": "#/$defs/AssetRefs"
+        },
+        "relationships": {
+          "items": {
+            "$ref": "#/$defs/RelationshipSpec"
+          },
+          "title": "Relationships",
+          "type": "array"
+        },
+        "dependencies": {
+          "items": {
+            "$ref": "#/$defs/ShotDependency"
+          },
+          "title": "Dependencies",
+          "type": "array"
+        },
+        "excluded_elements": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Excluded Elements",
+          "type": "array"
+        },
+        "still_motion": {
+          "$ref": "#/$defs/StillMotionContract"
+        }
+      },
+      "required": [
+        "shot_id",
+        "title",
+        "duration_seconds",
+        "render_mode",
+        "purpose",
+        "single_event",
+        "coordinate_space",
+        "start_state",
+        "end_state",
+        "invariants",
+        "motion_contract",
+        "camera",
+        "still_motion"
+      ],
+      "title": "StillMotionShot",
+      "type": "object"
+    },
+    "TimedState": {
+      "additionalProperties": false,
+      "properties": {
+        "at_seconds": {
+          "minimum": 0,
+          "title": "At Seconds",
+          "type": "number"
+        },
+        "simulation_time": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Simulation Time"
+        },
+        "entities": {
+          "additionalProperties": {
+            "$ref": "#/$defs/EntityState"
+          },
+          "title": "Entities",
+          "type": "object"
+        }
+      },
+      "required": [
+        "at_seconds"
+      ],
+      "title": "TimedState",
+      "type": "object"
+    },
+    "VariantBudget": {
+      "additionalProperties": false,
+      "properties": {
+        "max_alternate_shots": {
+          "default": 5,
+          "maximum": 5,
+          "minimum": 0,
+          "title": "Max Alternate Shots",
+          "type": "integer"
+        },
+        "max_extra_duration_ratio": {
+          "default": 0.5,
+          "maximum": 0.5,
+          "minimum": 0,
+          "title": "Max Extra Duration Ratio",
+          "type": "number"
+        },
+        "max_generated_alternates": {
+          "default": 3,
+          "maximum": 3,
+          "minimum": 0,
+          "title": "Max Generated Alternates",
+          "type": "integer"
+        },
+        "deterministic_workers": {
+          "default": 2,
+          "maximum": 2,
+          "minimum": 1,
+          "title": "Deterministic Workers",
+          "type": "integer"
+        }
+      },
+      "title": "VariantBudget",
+      "type": "object"
+    },
+    "VariantPlan": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "production_plan_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Production Plan Sha256",
+          "type": "string"
+        },
+        "script_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Script Sha256",
+          "type": "string"
+        },
+        "budget": {
+          "$ref": "#/$defs/VariantBudget"
+        },
+        "alternate_shots": {
+          "items": {
+            "$ref": "#/$defs/AlternateShot"
+          },
+          "title": "Alternate Shots",
+          "type": "array"
+        },
+        "variants": {
+          "items": {
+            "$ref": "#/$defs/VariantRecipe"
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "title": "Variants",
+          "type": "array"
+        },
+        "default_variant_id": {
+          "const": "balanced",
+          "default": "balanced",
+          "title": "Default Variant Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "production_plan_sha256",
+        "script_sha256",
+        "variants"
+      ],
+      "title": "VariantPlan",
+      "type": "object"
+    },
+    "VariantRecipe": {
+      "additionalProperties": false,
+      "properties": {
+        "variant_id": {
+          "enum": [
+            "balanced",
+            "explain",
+            "dynamic",
+            "cinematic"
+          ],
+          "title": "Variant Id",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 40,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "scenes": {
+          "items": {
+            "$ref": "#/$defs/VariantSceneRecipe"
+          },
+          "minItems": 1,
+          "title": "Scenes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "variant_id",
+        "label",
+        "scenes"
+      ],
+      "title": "VariantRecipe",
+      "type": "object"
+    },
+    "VariantSceneRecipe": {
+      "additionalProperties": false,
+      "properties": {
+        "scene_id": {
+          "minimum": 1,
+          "title": "Scene Id",
+          "type": "integer"
+        },
+        "shot_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Shot Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "scene_id",
+        "shot_ids"
+      ],
+      "title": "VariantSceneRecipe",
+      "type": "object"
+    }
+  },
+  "anyOf": [
+    {
+      "$ref": "#/$defs/VariantPlan"
+    },
+    {
+      "$ref": "#/$defs/SequenceVariantPlan"
+    }
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

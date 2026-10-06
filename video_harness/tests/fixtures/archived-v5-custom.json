@@ -1,0 +1,76 @@
+{
+  "schema_version": 5,
+  "pacing": {
+    "preset": "shorts",
+    "version": 1
+  },
+  "pipeline": {
+    "output_mode": "all",
+    "variant_mode": "balanced_only"
+  },
+  "voice": {
+    "engine": "qwen3",
+    "model_id": "mlx-community/Qwen3-TTS-12Hz-1.7B-CustomVoice-8bit",
+    "model_revision": "41d3337e8b7f2843a75841595fc14e4b9a7a4b96",
+    "speaker": "Sohee",
+    "language": "Korean",
+    "instructions_file": "video_harness/agent/prompts/voice-sohee-ko-bright.txt",
+    "generation_preset": "consistent",
+    "temperature": 0.5,
+    "top_k": 30,
+    "top_p": 1.0,
+    "repetition_penalty": 1.05,
+    "emotion_mode": "off",
+    "speaking_rate": 1.0,
+    "max_tempo_factor": 1.4,
+    "target_syllables_per_second": 6.5,
+    "loudness_mode": "leveled",
+    "loudness_target_lufs": -18.0,
+    "loudness_range_lu": 5.0,
+    "loudness_true_peak_db": -1.5,
+    "max_internal_pause_ms": 150,
+    "sentence_leading_margin_ms": 50,
+    "sentence_trailing_margin_ms": 250,
+    "max_tokens": 4096,
+    "seed": 20260828,
+    "min_scene_seconds": 3.0,
+    "max_scene_seconds": 12.0
+  },
+  "local_video": {
+    "min_scene_seconds": 3.0,
+    "max_scene_seconds": 13.0,
+    "scene_gap_seconds": 0.0,
+    "camera_transition_seconds": 0.4,
+    "target_beat_min_seconds": 3.0,
+    "target_beat_max_seconds": 6.0,
+    "text_policy": "subtitles",
+    "subtitle_languages": "en,ja,zh,es",
+    "localized_delivery": "audio_tracks"
+  },
+  "render": {
+    "final_width": 1920,
+    "final_height": 1080,
+    "final_fps": 30,
+    "draft_width": 384,
+    "draft_height": 216,
+    "draft_fps": 9,
+    "x264_preset": "medium",
+    "x264_crf": 18,
+    "preview_interval_seconds": 0.5,
+    "contact_sheet_columns": 8
+  },
+  "qa": {
+    "max_undeclared_freeze_seconds": 2.0,
+    "black_frame_amount_percent": 99.9,
+    "black_frame_threshold": 17,
+    "audio_packet_tolerance_seconds": 0.05,
+    "duration_tolerance_seconds": 0.05
+  },
+  "music": {
+    "file": "Four-on-the-Floor Pulse.mp3",
+    "gain_db": -8.0,
+    "duck_db": -13.0,
+    "fade_seconds": 0.3,
+    "loop_mode": "loop"
+  }
+}

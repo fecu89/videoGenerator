@@ -1,0 +1,65 @@
+# caches and tool output
+.superpowers/
+__pycache__/
+.pytest_cache/
+*.pyc
+.DS_Store
+/tmp
+.render-tools/
+
+# per-video work: runs, storyboards and source material are local only
+runs/
+/storyboards/
+/docs/
+/video_harness/docs/superpowers/
+/와도/
+/지구과학/
+/지구시스템과학/
+/통합과학 1/
+/통합과학 2/
+/행성우주과학/
+*.pdf
+/**/*.pdf
+/**/*.jpeg
+
+# third-party models and music (licences differ; nothing under assets/ is committed)
+/**/*.glb
+/assets/
+/bgmusic/*
+!/bgmusic/README.md
+
+# voice reference samples
+/baseVoice.mp3
+/baseVoiceComent.txt
+/korean_reference_voice_20s_v2.mp3
+
+# Blender scratch files
+*.blend
+*.blend1
+
+# dependencies and build output
+node_modules/
+/video_harness/science_renderer/dist/
+test-output/
+.venv/
+venv/
+*.egg-info/
+.ruff_cache/
+.mypy_cache/
+
+# local secrets, editor and agent state, logs
+.env
+.env.*
+!.env.example
+.claude/settings.local.json
+.vscode/
+.idea/
+*.log
+
+# rendered or generated media (models, music and results stay local)
+*.mp4
+*.mov
+*.m4a
+*.mp3
+*.wav
+*.usdz

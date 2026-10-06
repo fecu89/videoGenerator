@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>영상 스튜디오 설정</title>
+    <link rel="stylesheet" href="/settings.css">
+    <script src="/settings.js" defer></script>
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="brand-block">
+        <span class="orbit-mark" aria-hidden="true"></span>
+        <div>
+          <strong>영상 스튜디오</strong>
+          <span class="file-name">Video Generator 설정</span>
+        </div>
+      </div>
+      <label class="search-box" for="settings-search">
+        <span>설정 찾기</span>
+        <input
+          id="settings-search"
+          type="search"
+          placeholder="이름, 설명 또는 키 검색"
+          autocomplete="off"
+          disabled
+        >
+      </label>
+      <div id="save-status" class="save-status is-loading" aria-live="polite">
+        불러오는 중
+      </div>
+    </header>
+
+    <div id="fatal-error" class="fatal-error" role="alert" hidden>
+      <strong>설정을 불러오지 못했습니다.</strong>
+      <p id="fatal-error-message"></p>
+      <button id="retry-load" type="button" class="button button-secondary">다시 시도</button>
+    </div>
+
+    <div id="loading-state" class="loading-state" aria-live="polite">
+      <span class="loading-orbit" aria-hidden="true"></span>
+      <p>현재 설정과 허용 범위를 확인하고 있습니다.</p>
+    </div>
+
+    <div id="workbench" class="workbench" hidden>
+      <aside class="section-rail">
+        <p class="rail-label">설정 분류</p>
+        <nav id="settings-nav" class="section-nav" aria-label="설정 분류"></nav>
+        <div class="rail-note">
+          <strong>적용 범위</strong>
+          <p>저장한 값은 새 실행부터 적용됩니다. 기존 실행의 스냅샷은 유지됩니다.</p>
+        </div>
+      </aside>
+
+      <main id="settings-main" class="settings-main">
+        <header class="studio-intro">
+          <div><h1>영상의 리듬을 한 번에.</h1><p>영상 템포를 고르고, 목소리와 출력 방식을 정하세요.</p></div>
+          <div class="voice-strip" aria-label="현재 음성 설정"><span id="voice-summary"></span><span id="pace-summary"></span><span id="sound-summary"></span></div>
+        </header>
+        <section id="form-errors" class="form-errors" role="alert" tabindex="-1" hidden>
+          <div>
+            <strong>저장하기 전에 확인할 항목이 있습니다.</strong>
+            <ul id="form-error-list"></ul>
+          </div>
+          <button id="reload-settings" type="button" class="button button-secondary" hidden>
+            파일 다시 불러오기
+          </button>
+        </section>
+
+        <div id="settings-sections" class="settings-sections"></div>
+
+
+      </main>
+    </div>
+
+    <footer id="save-bar" class="save-bar" hidden>
+      <p id="change-summary">변경 사항 없음</p>
+      <div class="save-actions">
+        <button id="restore-recommended" type="button" class="button button-quiet">
+          권장값 복원
+        </button>
+        <button id="save-settings" type="button" class="button button-secondary" disabled>
+          저장
+        </button>
+        <button id="save-and-close" type="button" class="button button-primary">
+          저장 후 닫기
+        </button>
+      </div>
+    </footer>
+
+    <section id="closing-screen" class="closing-screen" hidden>
+      <span class="orbit-mark orbit-mark-large" aria-hidden="true"></span>
+
+      <h1>설정이 저장되었습니다.</h1>
+      <p>설정 서버를 종료했습니다. 이 탭을 닫아도 됩니다.</p>
+    </section>
+  </body>
+</html>

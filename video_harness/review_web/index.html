@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ko">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>영상 프리뷰 검토</title><link rel="stylesheet" href="/review.css"><script src="/review.js" defer></script></head>
+<body>
+<header><a class="brand" href="/">VideoGenerator <span id="mode-label">프리뷰 검토</span></a><div class="save-bar"><span id="save-status" role="status">불러오는 중</span><button id="save" disabled>수정 의견 저장</button><button id="regenerate" hidden disabled>수정 반영 후 프리뷰 다시 만들기</button><button id="approve" class="primary" disabled>프리뷰 승인</button></div></header>
+<div id="notice" role="alert" hidden></div>
+<div id="regeneration-status" role="status" hidden><span id="regeneration-message"></span><button id="load-preview" hidden>새 프리뷰 보기</button></div>
+<div class="workspace">
+ <aside><div class="project"><h1 id="project-title">영상 검토</h1><p id="project-meta"></p></div><nav id="scenes" aria-label="장면 선택"></nav><div class="aside-note">↑ ↓ 장면 이동<br>← → 프리뷰 이미지 이동</div></aside>
+ <main>
+  <div class="scene-heading"><div><p id="scene-position"></p><h2 id="scene-title"></h2></div><div class="step-buttons"><button id="prev-scene" aria-label="이전 장면" aria-keyshortcuts="ArrowUp" title="이전 장면 (↑)">↑</button><button id="next-scene" aria-label="다음 장면" aria-keyshortcuts="ArrowDown" title="다음 장면 (↓)">↓</button></div></div>
+  <div class="review-layout">
+   <section class="visual" aria-label="영상 프리뷰">
+    <div id="story-panel" hidden><h3>이 장면의 대본</h3><p id="story-narration"></p><h3>화면에서 보여줄 내용</h3><p id="visual-subject"></p></div>
+    <div class="image-stage"><img id="preview" alt=""><p id="no-image" hidden>아직 생성된 프리뷰 이미지가 없습니다.</p><button id="expand">이미지 크게 보기</button></div>
+    <div class="frame-caption"><strong id="frame-caption"></strong><span>대표 프레임</span></div><div id="frames" class="filmstrip" aria-label="프리뷰 프레임 선택"></div>
+    <div class="feedback"><div class="section-title"><h3>이 장면의 수정 사항</h3><span id="comment-state"></span></div><label for="comment" class="sr-only">이 장면의 수정 사항</label><textarea id="comment" maxlength="10000" placeholder="예: 카메라가 돌아가는 속도를 줄이고, 가로등을 화면 중앙에 놓아 주세요."></textarea><p>어떤 화면이나 대사를 어떻게 바꿀지 적어 주세요.</p></div>
+   </section>
+   <section class="scripts" aria-label="대본과 영상대본"><div class="narration"><div class="section-title"><h3>나레이션 대본</h3><span id="duration"></span></div><p id="narration"></p><audio id="audio" controls preload="none"></audio></div><div class="direction"><h3>영상대본</h3><p class="hint">선택한 프레임에 해당하는 구간을 표시합니다.</p><div id="shots"></div></div></section>
+  </div>
+  <section id="brief-section" hidden><h3><label for="visual-brief">영상 아이디어</label> <span class="hint">선택</span></h3><p class="hint">원하는 화면이나 연출을 적어 주세요. 비워 두면 대본에 맞춰 자동으로 구성합니다. 대본 승인 뒤 영상대본 작성과 프리뷰 생성을 이어서 진행합니다.</p><textarea id="visual-brief" maxlength="20000" placeholder="예: 태양을 확대한 뒤 입자 산란을 보여주고, 안개 낀 거리의 가로등으로 이어 주세요."></textarea></section>
+  <details id="story-document"><summary>스토리 검토 문서 전체 보기</summary><div id="story-content"></div></details>
+  <details class="overall"><summary>영상 전체에 대한 수정 의견</summary><label for="overall" class="sr-only">영상 전체에 대한 수정 의견</label><textarea id="overall" maxlength="10000" placeholder="여러 장면에 공통으로 적용할 수정 사항을 적어 주세요."></textarea></details>
+  <footer><span id="feedback-count">수정 의견 0개</span><span>의견을 저장하면 이 프로젝트의 검토 기록에 반영됩니다.</span></footer>
+ </main>
+</div>
+<dialog id="image-dialog"><button id="close-dialog">닫기 ×</button><img id="large-image" alt="선택한 프리뷰 확대"></dialog>
+</body></html>

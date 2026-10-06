@@ -1,0 +1,157 @@
+{
+  "$defs": {
+    "OutputSettings": {
+      "additionalProperties": false,
+      "properties": {
+        "width": {
+          "minimum": 1,
+          "title": "Width",
+          "type": "integer"
+        },
+        "height": {
+          "minimum": 1,
+          "title": "Height",
+          "type": "integer"
+        },
+        "fps": {
+          "minimum": 1,
+          "title": "Fps",
+          "type": "integer"
+        },
+        "video_codec": {
+          "const": "h264",
+          "title": "Video Codec",
+          "type": "string"
+        },
+        "audio_codec": {
+          "const": "aac",
+          "title": "Audio Codec",
+          "type": "string"
+        },
+        "scene_transition": {
+          "$ref": "#/$defs/SceneTransitionSettings"
+        }
+      },
+      "required": [
+        "width",
+        "height",
+        "fps",
+        "video_codec",
+        "audio_codec"
+      ],
+      "title": "OutputSettings",
+      "type": "object"
+    },
+    "SceneTransitionSettings": {
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "default": "dip_to_black",
+          "enum": [
+            "cut",
+            "dip_to_black"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "duration_seconds": {
+          "default": 0.65,
+          "minimum": 0,
+          "title": "Duration Seconds",
+          "type": "number"
+        },
+        "fade_seconds": {
+          "default": 0.15,
+          "minimum": 0,
+          "title": "Fade Seconds",
+          "type": "number"
+        }
+      },
+      "title": "SceneTransitionSettings",
+      "type": "object"
+    },
+    "SpectralPhysics": {
+      "additionalProperties": false,
+      "properties": {
+        "model": {
+          "const": "schematic-stellar-spectra",
+          "title": "Model",
+          "type": "string"
+        }
+      },
+      "required": [
+        "model"
+      ],
+      "title": "SpectralPhysics",
+      "type": "object"
+    },
+    "SpectralScene": {
+      "additionalProperties": false,
+      "properties": {
+        "scene_id": {
+          "minimum": 1,
+          "title": "Scene Id",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "scene_id"
+      ],
+      "title": "SpectralScene",
+      "type": "object"
+    },
+    "SpectralStyle": {
+      "additionalProperties": false,
+      "properties": {
+        "seed": {
+          "default": 20260915,
+          "title": "Seed",
+          "type": "integer"
+        }
+      },
+      "title": "SpectralStyle",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "preset": {
+      "const": "stellar-spectra-blender",
+      "title": "Preset",
+      "type": "string"
+    },
+    "output": {
+      "$ref": "#/$defs/OutputSettings"
+    },
+    "physics": {
+      "$ref": "#/$defs/SpectralPhysics"
+    },
+    "style": {
+      "$ref": "#/$defs/SpectralStyle"
+    },
+    "scenes": {
+      "items": {
+        "$ref": "#/$defs/SpectralScene"
+      },
+      "minItems": 1,
+      "title": "Scenes",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "preset",
+    "output",
+    "physics",
+    "style",
+    "scenes"
+  ],
+  "title": "BlenderSimulationConfig",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

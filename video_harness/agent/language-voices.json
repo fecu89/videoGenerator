@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "voices": {
+    "ko": {
+      "font": "Apple SD Gothic Neo",
+      "chars_per_line": 22,
+      "units_per_second": 5.2
+    },
+    "en": {
+      "engine": "kokoro",
+      "model_id": "mlx-community/Kokoro-82M-bf16",
+      "voice": "af_heart",
+      "lang_code": "a",
+      "font": "Helvetica Neue",
+      "chars_per_line": 42,
+      "units_per_second": 11.5,
+      "revision": "a71e4d38b236d968966a2002c4c895dbd12b1c3c"
+    },
+    "ja": {
+      "engine": "kokoro",
+      "model_id": "mlx-community/Kokoro-82M-bf16",
+      "voice": "jf_alpha",
+      "lang_code": "j",
+      "font": "Hiragino Sans",
+      "chars_per_line": 20,
+      "units_per_second": 5.0,
+      "revision": "a71e4d38b236d968966a2002c4c895dbd12b1c3c"
+    },
+    "zh": {
+      "engine": "qwen3",
+      "model_id": "mlx-community/Qwen3-TTS-12Hz-1.7B-CustomVoice-8bit",
+      "speaker": "vivian",
+      "language": "chinese",
+      "font": "PingFang SC",
+      "chars_per_line": 20,
+      "units_per_second": 4.2
+    },
+    "es": {
+      "engine": "kokoro",
+      "model_id": "mlx-community/Kokoro-82M-bf16",
+      "voice": "ef_dora",
+      "lang_code": "e",
+      "font": "Helvetica Neue",
+      "chars_per_line": 42,
+      "units_per_second": 12.5,
+      "revision": "a71e4d38b236d968966a2002c4c895dbd12b1c3c"
+    }
+  }
+}

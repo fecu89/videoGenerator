@@ -1,0 +1,82 @@
+{
+  "schema_version": 4,
+  "pipeline": {
+    "output_mode": "all",
+    "variant_mode": "four"
+  },
+  "voice": {
+    "engine": "voxcpm2",
+    "model_id": "mlx-community/Qwen3-TTS-12Hz-1.7B-CustomVoice-8bit",
+    "model_revision": "41d3337e8b7f2843a75841595fc14e4b9a7a4b96",
+    "speaker": "Sohee",
+    "language": "Korean",
+    "instructions_file": "video_harness/agent/prompts/voice-sohee-ko.txt",
+    "generation_preset": "consistent",
+    "temperature": 0.5,
+    "top_k": 30,
+    "top_p": 1.0,
+    "repetition_penalty": 1.05,
+    "voxcpm_source": "modelscope",
+    "voxcpm_model_id": "OpenBMB/VoxCPM2",
+    "voxcpm_revision": "master",
+    "voxcpm_device": "auto",
+    "voxcpm_voice": "bright_female",
+    "voxcpm_reference_audio": "",
+    "voxcpm_consistency_mode": "standard",
+    "acting_style": "natural",
+    "voxcpm_reference_text": "",
+    "voxcpm_cfg": 2.0,
+    "voxcpm_steps": 10,
+    "emotion_mode": "off",
+    "speed_mode": "manual",
+    "speaking_rate": 1.0,
+    "max_tempo_factor": 1.25,
+    "target_syllables_per_second": 5.2,
+    "loudness_mode": "leveled",
+    "loudness_target_lufs": -18.0,
+    "loudness_range_lu": 5.0,
+    "loudness_true_peak_db": -1.5,
+    "max_internal_pause_ms": 350,
+    "sentence_leading_margin_ms": 100,
+    "sentence_trailing_margin_ms": 950,
+    "max_tokens": 4096,
+    "seed": 20260828,
+    "min_scene_seconds": 5.0,
+    "max_scene_seconds": 14.0
+  },
+  "local_video": {
+    "min_scene_seconds": 5.0,
+    "max_scene_seconds": 15.0,
+    "scene_gap_seconds": 0.65,
+    "camera_transition_seconds": 0.35,
+    "text_policy": "legacy",
+    "subtitle_languages": "",
+    "localized_delivery": "burned_videos"
+  },
+  "render": {
+    "final_width": 1920,
+    "final_height": 1080,
+    "final_fps": 30,
+    "draft_width": 960,
+    "draft_height": 540,
+    "draft_fps": 15,
+    "x264_preset": "medium",
+    "x264_crf": 18,
+    "preview_interval_seconds": 0.5,
+    "contact_sheet_columns": 8
+  },
+  "qa": {
+    "max_undeclared_freeze_seconds": 2.0,
+    "black_frame_amount_percent": 99.9,
+    "black_frame_threshold": 17,
+    "audio_packet_tolerance_seconds": 0.05,
+    "duration_tolerance_seconds": 0.05
+  },
+  "music": {
+    "file": "",
+    "gain_db": -12.0,
+    "duck_db": -16.0,
+    "fade_seconds": 1.2,
+    "loop_mode": "loop"
+  }
+}

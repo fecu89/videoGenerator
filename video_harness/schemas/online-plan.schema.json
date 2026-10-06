@@ -1,0 +1,190 @@
+{
+  "$defs": {
+    "OnlineShot": {
+      "additionalProperties": false,
+      "properties": {
+        "online_shot_id": {
+          "pattern": "^ON-[A-Z0-9-]+$",
+          "title": "Online Shot Id",
+          "type": "string"
+        },
+        "beat_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Beat Ids",
+          "type": "array"
+        },
+        "scene_ids": {
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1,
+          "title": "Scene Ids",
+          "type": "array"
+        },
+        "source_sequence_id": {
+          "pattern": "^SEQ\\d{2,}$",
+          "title": "Source Sequence Id",
+          "type": "string"
+        },
+        "source_start_frame": {
+          "minimum": 0,
+          "title": "Source Start Frame",
+          "type": "integer"
+        },
+        "source_end_frame": {
+          "exclusiveMinimum": 0,
+          "title": "Source End Frame",
+          "type": "integer"
+        },
+        "duration_seconds": {
+          "exclusiveMinimum": 0,
+          "maximum": 8.0,
+          "title": "Duration Seconds",
+          "type": "number"
+        },
+        "short_shot_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Short Shot Reason"
+        },
+        "preferred_mode": {
+          "enum": [
+            "t2v",
+            "i2v",
+            "first_last",
+            "v2v"
+          ],
+          "title": "Preferred Mode",
+          "type": "string"
+        },
+        "science_authority": {
+          "enum": [
+            "local_reference",
+            "reference_frame",
+            "advisory_only"
+          ],
+          "title": "Science Authority",
+          "type": "string"
+        },
+        "primary_event": {
+          "minLength": 1,
+          "title": "Primary Event",
+          "type": "string"
+        },
+        "invariants": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Invariants",
+          "type": "array"
+        },
+        "allowed_changes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Allowed Changes",
+          "type": "array"
+        },
+        "excluded_elements": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Excluded Elements",
+          "type": "array"
+        },
+        "reference_image_files": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reference Image Files",
+          "type": "array"
+        },
+        "reference_video_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reference Video File"
+        },
+        "prompt_file": {
+          "minLength": 1,
+          "title": "Prompt File",
+          "type": "string"
+        },
+        "metadata_file": {
+          "minLength": 1,
+          "title": "Metadata File",
+          "type": "string"
+        }
+      },
+      "required": [
+        "online_shot_id",
+        "beat_ids",
+        "scene_ids",
+        "source_sequence_id",
+        "source_start_frame",
+        "source_end_frame",
+        "duration_seconds",
+        "preferred_mode",
+        "science_authority",
+        "primary_event",
+        "invariants",
+        "prompt_file",
+        "metadata_file"
+      ],
+      "title": "OnlineShot",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "script_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Script Sha256",
+      "type": "string"
+    },
+    "production_plan_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Production Plan Sha256",
+      "type": "string"
+    },
+    "shots": {
+      "items": {
+        "$ref": "#/$defs/OnlineShot"
+      },
+      "minItems": 1,
+      "title": "Shots",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "script_sha256",
+    "production_plan_sha256",
+    "shots"
+  ],
+  "title": "OnlinePlan",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}
