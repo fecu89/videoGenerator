@@ -273,7 +273,13 @@ class ReviewHandler(BaseHTTPRequestHandler):
             with self.server.save_lock:
                 result = save_feedback(self.server.run, payload, self.server.mode)
             print(f'검토 입력 저장: {self.server.mode}-feedback.json ({result["status"]})', flush=True)
-            self.send(200, result)
+            # Approval ends this review: tell the page to close and stop serving,
+            # so the waiting agent is released like the settings screen does.
+            closing = result['status'] == 'approved'
+            self.send(200, {**result, 'closing': closing})
+            if closing:
+                print('승인 완료: 검토 화면을 닫습니다.', flush=True)
+                threading.Thread(target=self.server.shutdown, daemon=True).start()
         except (ValueError, OSError) as error:
             self.send(400, {'error': str(error)})
 

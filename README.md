@@ -96,7 +96,7 @@ When you're done, press **저장 후 닫기** (Save and close) at the bottom rig
 When you're done, press a button at the top right.
 
 - **수정 의견 저장** (Save feedback): when something needs fixing. After saving, tell the agent "I left feedback". The web page does not notify the agent by itself.
-- **대본 승인** (Approve script): when it's good as is. Approving starts voice generation.
+- **대본 승인** (Approve script): when it's good as is. Approving closes the page and starts voice generation.
 
 Saving without approving does not move things forward. When the agent revises the script, refresh the same page, read it again, and approve.
 
@@ -121,7 +121,7 @@ There are three buttons at the top right.
 
 - **수정 의견 저장** (Save feedback): saves your feedback only.
 - **수정 반영 후 프리뷰 다시 만들기** (Apply changes and rebuild preview): saves your feedback and requests a new preview. After pressing it, tell the agent "I submitted preview feedback".
-- **프리뷰 승인** (Approve preview): when it's good as is. It can't be pressed while feedback is written.
+- **프리뷰 승인** (Approve preview): when it's good as is. Approving closes the page. It can't be pressed while feedback is written.
 
 After the agent makes changes, **새 프리뷰 보기** (View new preview) appears at the top of the page. Repeat until you're happy.
 

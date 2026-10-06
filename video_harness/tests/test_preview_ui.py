@@ -163,6 +163,34 @@ def test_local_http_feedback_round_trip_and_origin_guard(tmp_path):
         thread.join()
 
 
+def test_story_approval_closes_the_review_server(tmp_path, monkeypatch):
+    write_run(tmp_path)
+    monkeypatch.setattr('video_harness.creative_gates.require_story_chain', lambda run: None)
+    server = ReviewServer(tmp_path, mode='story')
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        data = json.load(urlopen(server.origin + '/api/review'))
+        headers = {'Content-Type': 'application/json', 'Origin': server.origin, 'X-Review-Token': data['token']}
+
+        def post(action):
+            body = json.dumps({'revision': data['revision'], 'comments': {}, 'action': action}).encode()
+            return json.load(urlopen(Request(server.origin + '/api/feedback', data=body, headers=headers)))
+
+        # Saving keeps the review open; only an approval ends it.
+        assert post('save')['closing'] is False
+        assert thread.is_alive()
+        result = post('approve')
+        assert result['status'] == 'approved' and result['closing'] is True
+        thread.join(timeout=5)
+        assert not thread.is_alive()
+        assert (tmp_path / 'story-approval.json').exists()
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join()
+
+
 def test_preview_command_opens_review_after_render(tmp_path, monkeypatch):
     from types import SimpleNamespace
     from video_harness import preview, preview_ui
