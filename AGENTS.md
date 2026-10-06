@@ -10,7 +10,11 @@
 3. 서버가 종료되면 `python -m video_harness settings`로 새 실행에 적용할
    `settings.json` 값을 확인한다.
 4. `video_harness/agent/WORKFLOW.md`를 처음부터 끝까지 읽고 조사와 전체 대본
-   초안까지만 작성한다.
+   초안까지만 작성한다. 대본과 함께 `script.json`에 **쇼츠 제목**(`shorts_title`),
+   유튜브 설명(`upload_description`), 장면별 **쇼츠 포함 여부**(`in_shorts`)를 정한다.
+   쇼츠는 내용의 핵심만 남긴다. 빼도 흐름이 이어지는 장면은 `in_shorts: false`로
+   두고, 남긴 장면만 이어 들어도 말이 되게 한다. 대본 웹이 쇼츠 제목·남긴 장면 수·
+   예상 길이를 보여주며, 예상 길이가 유튜브 쇼츠 한도(3분)를 넘으면 대본 승인을 막는다.
 5. `story-ui runs/<run>`으로 현재 전체 대본을 웹에 제시하고 영상 아이디어(선택)와 수정 의견을 함께 받는다. 수정 요청을 반영할 때마다 웹을 새로 제시한다.
 6. 사람이 현재 대본을 명시적으로 승인하기 전에는 다음 명령이나 TTS·영상
    계획·렌더링에 해당하는 다른 작업을 실행하지 않는다.
@@ -25,7 +29,8 @@ python -m video_harness produce runs/<run>
 
 한국어 음성이 확정되면 `translate-scaffold`가 장면별 말하기 예산이 든
 `translations.json` 틀을 만든다. 에이전트가 `text`에 영어·일본어·중국어·
-스페인어 번역을 채운 뒤 `voice --target-language all`로 언어별 음성을
+스페인어 번역을, `title`·`shorts_title`·`description`에 영상 제목·쇼츠 제목·
+유튜브 설명의 번역을 채운 뒤 `voice --target-language all`로 언어별 음성을
 합성한다. 엔진·모델·화자는 `language-voices.json`이 정하고, 각 장면은 한국어
 장면 길이에 맞춰 속도 보정(`voice.max_tempo_factor` 상한)되며 넘치면 그 장면 번역을 줄인다.
 번역과 다른 언어 음성에는 사용자 승인·청취 검토가 없고 게이트만 통과하면 된다.
@@ -78,6 +83,20 @@ python -m video_harness produce runs/<run> --quality final
 ```bash
 python -m video_harness progress-ui runs/<run> --pid PID --staging STAGING --total-frames TOTAL --quality final
 ```
+
+`produce --quality final`은 최종 영상을 게시·검증한 뒤 같은 프로세스에서 이어서
+언어별 세로 쇼츠(`shorts/shorts-<lang>.mp4`)와 업로드 문구(`upload.md`)를 만든다.
+쇼츠는 `in_shorts`로 남긴 장면만 이어 붙이고 화면 위에 그 언어의 쇼츠 제목을 넣는다.
+업로드 문구는 언어별 영상·쇼츠의 제목과 설명이며, 설명 끝에 실행 폴더 `assets/`의
+3D 모델 출처·제작자·라이선스(GLB 파일에 기록된 값), 배경음악, 음성 모델 표기가
+붙는다. 로딩창은 제작이 끝나면 최종 영상 아래에 이 문구를 언어별 복사 상자로
+보여준다. 대화에서 완성을 보고할 때도 `upload.md`의 내용을 언어별 코드 상자로
+제시한다. `upload.md`의 "올리기 전에 확인" 항목(출처 없는 모델, 비영리·변경 금지
+라이선스)은 사용자에게 그대로 알린다. 다시 만들 때는 `python -m video_harness shorts
+runs/<run>`과 `python -m video_harness upload-text runs/<run>`을 쓴다. 대본 승인 뒤에 제목·설명을
+정하는 기존 실행은 `script.json`과 `translations.json`을 고치지 않고(승인·음성 해시가
+걸려 있다) 실행 폴더의 `upload-overrides.json`(`title`·`shorts_title`·`description`의
+언어별 값)에 적는다. `shorts --title LANG=제목`은 이 파일에 쇼츠 제목을 저장한다.
 
 로딩창과 제작 프로세스를 실행 상태로 두고 대화는 마무리한다. 완료 전에는 완성으로
 보고하지 않으며, 오류 확인이나 사용자 요청이 있을 때만 다시 개입한다.

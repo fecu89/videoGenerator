@@ -60,6 +60,7 @@ def build_review(run, mode='preview'):
         row = {k: scene.get(k) for k in ('scene_id', 'title', 'narration', 'duration_seconds')}
         row.update(shots=[], frames=[], audio=None)
         row['visual_subject'] = scene.get('visual_subject', '')
+        row['in_shorts'] = scene.get('in_shorts', True)
         row['sentence_pauses'] = scene.get('sentence_pauses', [])
         if scene.get('audio_file'):
             try:
@@ -104,7 +105,16 @@ def build_review(run, mode='preview'):
     if isinstance(title, dict):
         title = title.get('title', run.name)
     story = next((p.read_text(encoding='utf-8') for p in (run / 'story-review.md', run / 'story.md') if p.exists()), '')
-    return dict(title=title, run=run.name, revision=current, mode=mode, story=story,
+    shorts_seconds = None
+    if mode == 'story':
+        try:
+            from .shorts import estimated_seconds
+            from .settings import resolve_run_settings
+            shorts_seconds = estimated_seconds(script.get('scenes', []), resolve_run_settings(
+                run if (run / 'run-settings.json').is_file() else None, persist=False).voice.target_syllables_per_second)
+        except (OSError, ValueError):
+            pass
+    return dict(title=title, shorts_title=script.get('shorts_title'), shorts_seconds=shorts_seconds, run=run.name, revision=current, mode=mode, story=story,
                 scenes=scenes, feedback=feedback, feedback_stale=stale, previous_feedback=previous_feedback,
                 regeneration=read_json(run / REGENERATION_FILE) if mode == 'preview' and (run / REGENERATION_FILE).exists() else None,
                 text_gate=read_json(run / 'text-preview-gate.json').get('status') if (run / 'text-preview-gate.json').exists() else 'unchecked')
@@ -157,7 +167,9 @@ def save_feedback(run, payload, mode='preview'):
             approve_preview(run)
         else:
             from .creative_gates import require_story_chain
+            from .shorts import require_shorts_length
             require_story_chain(run)
+            require_shorts_length(run)
             atomic_write(run / 'story-approval.json', json.dumps(dict(
                 schema_version=1, approved_at=record['saved_at'], revision=record['revision'],
                 script_sha256=hashlib.sha256((run / 'script.json').read_bytes()).hexdigest(),

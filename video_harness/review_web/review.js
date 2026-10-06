@@ -149,8 +149,12 @@ fetch('/api/review').then(async response => { const body = await response.json()
   $('project-title').textContent = typeof body.title === 'string' ? body.title : body.run;
   const seconds = Math.round(body.scenes.reduce((s, x) => s + (x.duration_seconds || 0), 0));
   $('project-meta').textContent = `${body.scenes.length}개 장면${seconds ? ` · ${seconds}초` : ''}`;
+  $('shorts-title').hidden = !storyMode;
+  const kept = body.scenes.filter(scene => scene.in_shorts !== false).length;
+  $('shorts-title').textContent = (body.shorts_title ? `쇼츠 제목: ${body.shorts_title}` : '쇼츠 제목: 정하지 않음 (영상 제목 사용)')
+    + ` · 쇼츠 ${kept}/${body.scenes.length}개 장면${body.shorts_seconds ? ` · 약 ${Math.round(body.shorts_seconds)}초` : ''}`;
   document.title = `${$('project-title').textContent} — ${$('mode-label').textContent}`;
-  body.scenes.forEach((scene, i) => { const b = node('button'); b.append(node('span', String(scene.scene_id).padStart(2, '0'), 'number'), node('span', scene.title)); b.onclick = () => showScene(i); $('scenes').append(b); });
+  body.scenes.forEach((scene, i) => { const b = node('button'); b.append(node('span', String(scene.scene_id).padStart(2, '0'), 'number'), node('span', scene.title)); if (storyMode && scene.in_shorts === false) b.append(node('span', '쇼츠 생략', 'cut')); b.onclick = () => showScene(i); $('scenes').append(b); });
   if (!body.scenes.length) throw Error('검토할 장면이 없습니다.');
   showScene(0); showRegeneration(body.regeneration); $('save').disabled = false; $('save-status').textContent = body.feedback ? '저장한 의견 불러옴' : '수정 의견을 남겨 주세요';
   if (body.mode === 'preview') setInterval(async () => {

@@ -192,6 +192,8 @@ python -m video_harness produce runs/<run> --quality final
 python -m video_harness validate runs/<run>
 ```
 
+最终视频通过检查后,同一条命令会接着生成各语言的竖版短视频(`shorts/shorts-<lang>.mp4`,只保留脚本中标记为短视频的场景,最长3分钟)和 `upload.md`。`upload.md` 包含各语言的标题、简介,以及3D模型、背景音乐和语音的出处标注,完成页面会带复制按钮显示这些内容。
+
 以下文档是用韩语写的。
 
 - 完整的工作顺序和批准规则:[video_harness/agent/WORKFLOW.md](video_harness/agent/WORKFLOW.md)

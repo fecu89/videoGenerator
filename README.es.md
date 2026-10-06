@@ -192,6 +192,8 @@ python -m video_harness produce runs/<run> --quality final
 python -m video_harness validate runs/<run>
 ```
 
+Cuando el video final pasa las comprobaciones, el mismo comando crea además un short vertical por idioma (`shorts/shorts-<lang>.mp4`, solo con las escenas que el guion marca para el short, máximo 3 minutos) y `upload.md`: títulos y descripciones por idioma listos para copiar, con los créditos de los modelos 3D, la música y la voz. La página del video terminado los muestra con botones de copiar.
+
 Los documentos siguientes están escritos en coreano.
 
 - Flujo de trabajo completo y reglas de aprobación: [video_harness/agent/WORKFLOW.md](video_harness/agent/WORKFLOW.md)

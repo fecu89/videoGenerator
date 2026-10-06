@@ -394,6 +394,26 @@ def produce(
         return report
 
 
+def _after_final(run_dir: Path) -> int:
+    """Shorts and the upload sheet follow a published final; their failure never undoes the film."""
+    from .shorts import build_shorts
+    from .upload_text import write_upload_text
+
+    status = 0
+    try:
+        for path in build_shorts(run_dir, quality="final"):
+            print(f"shorts ready: {path}")
+    except (OSError, ValueError, RuntimeError) as error:
+        print(f"shorts failed (final video is complete): {error}")
+        status = 1
+    try:
+        print(f"upload text ready: {write_upload_text(run_dir)}")
+    except (OSError, ValueError) as error:
+        print(f"upload text failed (final video is complete): {error}")
+        status = 1
+    return status
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Produce a settings-aware schema-v2 video run.")
     parser.add_argument("run_directory", type=Path, help="schema-v2 run directory")
@@ -420,4 +440,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     if report.quality == "draft" and report.output_mode != "prompts_only":
         print(f"draft ready for review: {args.run_directory.resolve() / 'final-draft.mp4'}")
         print("Show the draft to the user first; use --quality final after feedback.")
+    if report.quality == "final" and report.output_mode != "prompts_only":
+        return _after_final(args.run_directory)
     return 0

@@ -18,6 +18,8 @@
       "items": { "$ref": "#/$defs/topicCandidate" }
     },
     "selected_topic": { "$ref": "#/$defs/selectedTopic" },
+    "shorts_title": { "type": ["string", "null"], "minLength": 1, "maxLength": 40 },
+    "upload_description": { "type": ["string", "null"], "minLength": 1, "maxLength": 2000 },
     "story_engine": { "$ref": "#/$defs/storyEngine" },
     "scenes": {
       "type": "array",
@@ -86,6 +88,7 @@
       "required": ["scene_id", "title", "narration", "narrative_role", "visual_subject", "source_ids", "duration_seconds", "audio_file", "video_prompt_file"],
       "properties": {
         "scene_id": { "type": "integer", "minimum": 1 },
+        "in_shorts": { "type": "boolean" },
         "title": { "type": "string", "minLength": 1, "maxLength": 60 },
         "narration": { "type": "string", "minLength": 1 },
         "narrative_role": { "type": "string", "minLength": 1 },

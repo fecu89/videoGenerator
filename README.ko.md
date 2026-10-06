@@ -190,6 +190,8 @@ python -m video_harness produce runs/<run> --quality final
 python -m video_harness validate runs/<run>
 ```
 
+최종 영상이 검사를 통과하면 같은 명령이 이어서 언어별 세로 쇼츠(`shorts/shorts-<lang>.mp4`, 대본에서 쇼츠에 남기기로 한 장면만, 최대 3분)와 `upload.md`를 만든다. `upload.md`는 언어별 제목·설명과 3D 모델·배경음악·음성 출처 표기이며, 완성 화면에서 복사 버튼과 함께 보여준다.
+
 - 전체 작업 순서와 승인 규칙: [video_harness/agent/WORKFLOW.md](video_harness/agent/WORKFLOW.md)
 - 대본과 화면의 기본 연출 기준: [video_harness/agent/DIRECTION.md](video_harness/agent/DIRECTION.md)
 - 하네스 구조: [video_harness/docs/architecture.md](video_harness/docs/architecture.md)

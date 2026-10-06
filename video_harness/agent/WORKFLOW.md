@@ -223,7 +223,10 @@ python -m video_harness translate-scaffold runs/<run>
 ```
 
 `translations.json` 틀이 장면마다 `budget_seconds`(한국어 `duration_seconds`)와
-빈 `text` 항목을 담는다. 에이전트는 각 언어 문장을 채운다. 문장은 마침표·물음표
+빈 `text` 항목을 담는다. 에이전트는 각 언어 문장을 채운다. 같은 파일의
+`title`·`shorts_title`·`description`에는 영상 제목·쇼츠 제목(`script.json`의
+`shorts_title`)·유튜브 설명(`upload_description`)의 언어별 번역을 채운다. 대본에
+쇼츠 제목이나 설명이 있는데 번역이 비어 있으면 `translation-gate`가 거부한다. 문장은 마침표·물음표
 등으로 끝나야 하고, 예상 길이(글자 수 ÷ `language-voices.json`의
 `units_per_second`)가 예산의 1.25배를 넘으면 `translation-gate`가 거부한다.
 게이트는 추정일 뿐이고, 실제 합성 길이는 문장 여백(문장마다 앞뒤 여백의 합, 현재 약 0.3초)과 모델 속도로
@@ -406,6 +409,9 @@ generated/reused/planned/skipped 산출물을 기록한다.
 - `qa-report.json`: 공개된 최종 QA
 - `local-production-report.json`: 비디오 mode의 입력 해시와 공개 산출물 생명주기 보고서
 - `pipeline-report.json`: 모든 `produce` 실행의 mode-aware 산출물 보고서
+- `shorts/shorts-<lang>.mp4`: 최종 제작 직후 만드는 언어별 세로 쇼츠(1080×1920).
+  `in_shorts: false` 장면을 잘라 내고 1.15배속으로 줄이며, 3분을 넘으면 만들지 않는다.
+- `upload.md`: 언어별 영상·쇼츠 제목과 설명, 3D 모델·배경음악·음성 모델 출처 표기
 - draft 실행은 `videoFiles/sequences/draft/`, `video-only-draft.mp4`,
   `final-draft.mp4`를 사용한다.
 

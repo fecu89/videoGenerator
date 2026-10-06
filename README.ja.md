@@ -192,6 +192,8 @@ python -m video_harness produce runs/<run> --quality final
 python -m video_harness validate runs/<run>
 ```
 
+最終動画が検査を通ると、同じコマンドが続けて言語別の縦型ショート（`shorts/shorts-<lang>.mp4`、台本でショートに残すと決めたシーンのみ、最長3分）と `upload.md` を作ります。`upload.md` は言語別のタイトル・説明と、3Dモデル・BGM・音声の出典表記で、完成画面にコピーボタン付きで表示されます。
+
 以下の文書は韓国語で書かれています。
 
 - 作業全体の順序と承認ルール: [video_harness/agent/WORKFLOW.md](video_harness/agent/WORKFLOW.md)

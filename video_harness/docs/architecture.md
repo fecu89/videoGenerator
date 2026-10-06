@@ -34,6 +34,7 @@
 | 화면 글자 | `text_labels.py`, `blender_renderer/callout.py`, `callout_math.py`, `science_renderer/src/callout.ts` | 계획이 소유한 핵심 단어 라벨과 지시선, text 게이트 |
 | 단계 승인 | `preview.py`, `stage_approvals.py` | 대표 프레임 프리뷰와 프리뷰·초본 승인 해시 |
 | 다국어 자막 | `language_voices.py`, `translations.py`, `kokoro_voice.py`, `localize_voice.py`, `subtitles.py`, `localize.py` | 언어별 엔진·번역 예산·장면 맞춤 음성·문장 타이밍 자막·언어별 완성본 조립 |
+| 쇼츠·업로드 | `shorts.py`, `upload_text.py` | 최종 영상에서 핵심 장면만 남긴 언어별 세로 쇼츠, 언어별 제목·설명과 출처 표기(`upload.md`, 완성 화면) |
 
 지원 3D 엔진은 **Blender와 Three.js**다. 새 3D 장면은 Blender MCP를 우선
 사용하되 Three.js도 허용한다. 계획에 렌더러를 명시하고 시퀀스별 혼합을

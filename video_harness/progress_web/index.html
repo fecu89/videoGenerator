@@ -2,11 +2,11 @@
 <html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>영상 제작 중</title>
 <style>
-:root{color-scheme:dark;font-family:system-ui,-apple-system,sans-serif;background:#101519;color:#edf4f5}*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:32px}main{width:min(680px,100%)}.eyebrow{color:#81dcca;font-size:13px;letter-spacing:.15em}h1{font-size:clamp(28px,5vw,42px);font-weight:600;letter-spacing:-.04em;margin:20px 0 14px}p{color:#9fafb8;line-height:1.7}#name{overflow-wrap:anywhere;font-size:14px}.numbers{display:flex;align-items:baseline;justify-content:space-between;margin-top:42px}#percent{font-size:64px;letter-spacing:-.06em}#frames{color:#9fafb8;font-variant-numeric:tabular-nums}progress{appearance:none;width:100%;height:7px;border:0;border-radius:8px;overflow:hidden;margin:12px 0 20px}progress::-webkit-progress-bar{background:#29343b}progress::-webkit-progress-value{background:#81dcca;transition:width .5s}progress::-moz-progress-bar{background:#81dcca}.status{display:flex;align-items:center;gap:10px}.dot{width:8px;height:8px;background:#81dcca;border-radius:50%;animation:pulse 1.6s infinite}@keyframes pulse{50%{opacity:.25}}body.done .dot{animation:none}body.failed .dot{animation:none;background:#f2ad87}a{color:#81dcca}video{width:100%;margin-top:24px;border-radius:12px}footer{margin-top:48px;border-top:1px solid #29343b;padding-top:18px;font-size:13px;color:#748892}[hidden]{display:none!important}
+:root{color-scheme:dark;font-family:system-ui,-apple-system,sans-serif;background:#101519;color:#edf4f5}*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:32px}main{width:min(680px,100%)}.eyebrow{color:#81dcca;font-size:13px;letter-spacing:.15em}h1{font-size:clamp(28px,5vw,42px);font-weight:600;letter-spacing:-.04em;margin:20px 0 14px}p{color:#9fafb8;line-height:1.7}#name{overflow-wrap:anywhere;font-size:14px}.numbers{display:flex;align-items:baseline;justify-content:space-between;margin-top:42px}#percent{font-size:64px;letter-spacing:-.06em}#frames{color:#9fafb8;font-variant-numeric:tabular-nums}progress{appearance:none;width:100%;height:7px;border:0;border-radius:8px;overflow:hidden;margin:12px 0 20px}progress::-webkit-progress-bar{background:#29343b}progress::-webkit-progress-value{background:#81dcca;transition:width .5s}progress::-moz-progress-bar{background:#81dcca}.status{display:flex;align-items:center;gap:10px}.dot{width:8px;height:8px;background:#81dcca;border-radius:50%;animation:pulse 1.6s infinite}@keyframes pulse{50%{opacity:.25}}body.done .dot{animation:none}body.failed .dot{animation:none;background:#f2ad87}a{color:#81dcca}video{width:100%;margin-top:24px;border-radius:12px}#upload{margin-top:44px}#upload h2{font-size:22px;letter-spacing:-.03em;margin:0 0 8px}#upload>p{font-size:14px;margin:0 0 18px}#upload-warnings{background:#3a2c1c;border:1px solid #6f5330;color:#f1cf9c;border-radius:10px;padding:14px 18px 14px 34px;font-size:13px;line-height:1.7;margin:0 0 18px}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}.tabs button,.copy{font:inherit;font-size:13px;cursor:pointer;color:#c9d9db;background:#19242b;border:1px solid #31434b;border-radius:8px;padding:8px 14px}.tabs button[aria-selected=true]{background:#81dcca;border-color:#81dcca;color:#0f191e;font-weight:700}.box{background:#19242b;border:1px solid #31434b;border-radius:12px;margin:0 0 16px;overflow:hidden}.box header{display:flex;justify-content:space-between;align-items:center;padding:10px 12px 10px 18px;border-bottom:1px solid #29343b;font-size:13px;color:#9fafb8}.box pre{margin:0;padding:16px 18px;white-space:pre-wrap;word-break:break-word;font:14px/1.7 ui-monospace,SFMono-Regular,Menlo,monospace;color:#e6eef0;max-height:340px;overflow:auto}.copy{padding:5px 12px}.copy.copied{color:#81dcca;border-color:#81dcca}.short video{width:min(260px,100%);margin:0 0 16px;display:block}.missing{font-size:13px;color:#f1cf9c;margin:0 0 14px}footer{margin-top:48px;border-top:1px solid #29343b;padding-top:18px;font-size:13px;color:#748892}[hidden]{display:none!important}
 
 .steps{display:flex;gap:20px;margin:30px 0;color:#738791;font-size:14px}.steps .active{color:#81dcca}.steps .checked{color:#c9d9db}.steps span{white-space:nowrap}#postprocess{margin:30px 0;padding:25px;background:#19242b;border:1px solid #31434b;border-radius:14px}#stage{font-size:22px;margin:0 0 10px;letter-spacing:-.03em}#detail{font-size:14px;margin:0 0 22px}.loading-track{height:5px;background:#2a3c44;border-radius:5px;overflow:hidden}.loading-track:before{content:'';display:block;width:35%;height:100%;background:#81dcca;border-radius:5px;animation:slide 1.7s ease-in-out infinite}@keyframes slide{from{transform:translateX(-110%)}to{transform:translateX(390%)}}body.finishing .numbers,body.finishing #bar{display:none}#render-done{font-size:13px;margin-top:20px;color:#91aaa9}body.done #bar{margin-bottom:20px}@media(prefers-reduced-motion:reduce){.dot,.loading-track:before{animation:none}.loading-track:before{width:100%;opacity:.6}}
 </style>
-<main><div class="eyebrow">VIDEO GENERATOR</div><h1 id="title">영상을 만들고 있습니다</h1><p id="name"></p><nav class="steps" aria-label="제작 단계"><span id="step-render">1 렌더링</span><span id="step-post">2 후처리·검사</span><span id="step-done">3 완료</span></nav><div class="numbers"><span><span id="percent">—</span><small style="display:block;color:#9fafb8;font-size:13px">프레임 렌더링</small></span><span id="frames"></span></div><progress id="bar" max="100" value="0" aria-label="프레임 렌더링 진행률"></progress><div class="status" role="status"><span class="dot"></span><span id="status">진행 상황을 연결하고 있습니다.</span></div><p id="hint">진행률은 자동으로 갱신됩니다. 렌더가 끝나면 음성 결합과 검사를 거쳐 영상이 표시됩니다.</p><section id="postprocess" hidden aria-live="polite"><h2 id="stage"></h2><p id="detail"></p><div class="loading-track" role="progressbar" aria-label="후처리 진행 중"></div><div id="render-done"></div></section><section id="result" hidden><video id="video" controls preload="metadata"></video><p><a id="download" href="/video.mp4" download="final.mp4">영상 저장</a></p></section><footer>진행 상황은 3초마다 갱신됩니다 · 이 창을 닫아도 제작은 계속됩니다.</footer></main>
+<main><div class="eyebrow">VIDEO GENERATOR</div><h1 id="title">영상을 만들고 있습니다</h1><p id="name"></p><nav class="steps" aria-label="제작 단계"><span id="step-render">1 렌더링</span><span id="step-post">2 후처리·검사</span><span id="step-done">3 완료</span></nav><div class="numbers"><span><span id="percent">—</span><small style="display:block;color:#9fafb8;font-size:13px">프레임 렌더링</small></span><span id="frames"></span></div><progress id="bar" max="100" value="0" aria-label="프레임 렌더링 진행률"></progress><div class="status" role="status"><span class="dot"></span><span id="status">진행 상황을 연결하고 있습니다.</span></div><p id="hint">진행률은 자동으로 갱신됩니다. 렌더가 끝나면 음성 결합과 검사를 거쳐 영상이 표시됩니다.</p><section id="postprocess" hidden aria-live="polite"><h2 id="stage"></h2><p id="detail"></p><div class="loading-track" role="progressbar" aria-label="후처리 진행 중"></div><div id="render-done"></div></section><section id="result" hidden><video id="video" controls preload="metadata"></video><p><a id="download" href="/video.mp4" download="final.mp4">영상 저장</a></p><section id="upload" hidden><h2>유튜브 업로드 문구</h2><p>언어를 고르고 상자별 복사 버튼으로 제목과 설명을 붙여 넣으세요. 설명 끝의 출처 표기는 지우지 않습니다.</p><ul id="upload-warnings" hidden></ul><div class="tabs" id="upload-tabs" role="tablist" aria-label="언어 선택"></div><div id="upload-body"></div></section></section><footer>진행 상황은 3초마다 갱신됩니다 · 이 창을 닫아도 제작은 계속됩니다.</footer></main>
 <script>
 const el = id => document.getElementById(id);
 let videoLoaded = false;
@@ -33,7 +33,7 @@ async function update() {
       el('title').textContent = '영상이 완성되었습니다';
       el('hint').textContent = '아래에서 영상을 재생하거나 저장할 수 있습니다.';
       el('result').hidden = false;
-      if (!videoLoaded) { const videoUrl = '/video.mp4?v=' + Date.now(); el('video').src = videoUrl; el('download').href = videoUrl; videoLoaded = true; }
+      if (!videoLoaded) { const videoUrl = '/video.mp4?v=' + Date.now(); el('video').src = videoUrl; el('download').href = videoUrl; videoLoaded = true; loadUpload(); }
       document.title = '영상 제작 완료';
     } else if (d.state === 'stopped') {
       terminal = true;
@@ -53,6 +53,43 @@ async function update() {
     }
   } catch (e) { el('status').textContent = '연결을 다시 시도하고 있습니다'; }
   if (!terminal) setTimeout(update, 3000);
+}
+function make(tag, text, className) { const n = document.createElement(tag); if (text != null) n.textContent = text; if (className) n.className = className; return n; }
+function copyBox(label, text) {
+  const box = make('div', null, 'box'), head = make('header'), button = make('button', '복사', 'copy');
+  button.onclick = async () => {
+    try { await navigator.clipboard.writeText(text); }
+    catch (e) { const area = make('textarea', text); document.body.append(area); area.select(); document.execCommand('copy'); area.remove(); }
+    button.textContent = '복사됨'; button.classList.add('copied');
+    setTimeout(() => { button.textContent = '복사'; button.classList.remove('copied'); }, 1500);
+  };
+  head.append(make('span', label), button); box.append(head, make('pre', text));
+  return box;
+}
+function showLanguage(sheet, index) {
+  const entry = sheet.languages[index], body = el('upload-body');
+  [...el('upload-tabs').children].forEach((tab, i) => tab.setAttribute('aria-selected', i === index));
+  body.replaceChildren();
+  if (!entry.title) body.append(make('p', '영상 제목 번역이 없습니다. translations.json의 title.' + entry.lang + '을 채워야 합니다.', 'missing'));
+  body.append(copyBox('영상 제목', entry.title || '—'), copyBox('영상 설명', entry.description || '—'));
+  if (entry.shorts_description != null) {
+    const short = make('div', null, 'short'), video = make('video');
+    video.controls = true; video.preload = 'metadata'; video.src = '/shorts/' + entry.lang + '.mp4';
+    short.append(video); body.append(short, copyBox('쇼츠 제목', entry.shorts_title || '—'), copyBox('쇼츠 설명', entry.shorts_description));
+  }
+}
+async function loadUpload() {
+  try {
+    const response = await fetch('/api/upload', {cache:'no-store'});
+    if (!response.ok) return;
+    const sheet = await response.json();
+    if (!sheet.languages.length && !sheet.warnings.length) return;
+    el('upload-warnings').hidden = !sheet.warnings.length;
+    sheet.warnings.forEach(w => el('upload-warnings').append(make('li', w.replaceAll('`', ''))));
+    sheet.languages.forEach((entry, i) => { const tab = make('button', entry.name); tab.setAttribute('role', 'tab'); tab.onclick = () => showLanguage(sheet, i); el('upload-tabs').append(tab); });
+    if (sheet.languages.length) showLanguage(sheet, 0);
+    el('upload').hidden = false;
+  } catch (e) {}
 }
 update();
 </script></html>

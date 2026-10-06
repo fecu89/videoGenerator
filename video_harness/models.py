@@ -97,6 +97,7 @@ class Scene(StrictModel):
     video_prompt_file: str | None = None
     sentence_delivery: list[SentenceDelivery] = Field(default_factory=list)
     sentence_pauses: list[SentencePause] = Field(default_factory=list)
+    in_shorts: bool = True
 
     @model_validator(mode="after")
     def validate_sentence_delivery(self) -> "Scene":
@@ -131,6 +132,8 @@ class FactCheck(StrictModel):
 class ScriptArtifact(StrictModel):
     candidates: list[TopicCandidate] = Field(default_factory=list)
     selected_topic: SelectedTopic
+    shorts_title: str | None = Field(default=None, min_length=1, max_length=40)
+    upload_description: str | None = Field(default=None, min_length=1, max_length=2000)
     story_engine: StoryEngine
     scenes: list[Scene] = Field(min_length=1)
     fact_checks: list[FactCheck] = Field(default_factory=list)

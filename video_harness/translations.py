@@ -29,6 +29,9 @@ class Translations(StrictModel):
     schema_version: Literal[1] = 1
     script_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     languages: list[str]
+    title: dict[str, str] = Field(default_factory=dict)
+    shorts_title: dict[str, str] = Field(default_factory=dict)
+    description: dict[str, str] = Field(default_factory=dict)
     scenes: list[TranslatedScene]
 
 
@@ -45,7 +48,9 @@ def scaffold_translations(run_dir: Path, languages: Sequence[str]) -> Translatio
             raise ValueError(f"scene {scene.scene_id} has no Korean duration; generate the master voice first")
         scenes.append(TranslatedScene(scene_id=scene.scene_id, budget_seconds=scene.duration_seconds,
                                       text={lang: "" for lang in languages}))
-    return Translations(script_sha256=_script_sha(run), languages=list(languages), scenes=scenes)
+    empty = {lang: "" for lang in languages}
+    return Translations(script_sha256=_script_sha(run), languages=list(languages),
+                        title=dict(empty), shorts_title=dict(empty), description=dict(empty), scenes=scenes)
 
 
 def write_translations(run_dir: Path, translations: Translations, *, force: bool = False) -> Path:
@@ -69,6 +74,12 @@ def translation_issues(translations: Translations, script: ScriptArtifact, scrip
     issues: list[str] = []
     if translations.script_sha256 != script_sha:
         issues.append("translation_stale: script.json changed after translations were written")
+    # Upload texts are translated only when the script declares the Korean original.
+    for code, declared, texts in (("shorts_title", script.shorts_title, translations.shorts_title),
+                                  ("title", script.upload_description, translations.title),
+                                  ("description", script.upload_description, translations.description)):
+        if declared:
+            issues.extend(f"{code}_missing: {lang}" for lang in languages if not texts.get(lang, "").strip())
     by_id = {scene.scene_id: scene for scene in translations.scenes}
     for scene in script.scenes:
         entry = by_id.get(scene.scene_id)
@@ -93,7 +104,7 @@ def translation_issues(translations: Translations, script: ScriptArtifact, scrip
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="한국어 장면 길이를 예산으로 한 빈 번역 틀(translations.json)을 만듭니다. 에이전트가 text만 채웁니다.")
+    parser = argparse.ArgumentParser(description="한국어 장면 길이를 예산으로 한 빈 번역 틀(translations.json)을 만듭니다. 에이전트가 장면 text와 title·shorts_title·description을 채웁니다.")
     parser.add_argument("run_directory", type=Path)
     parser.add_argument("--force", action="store_true")
     return parser

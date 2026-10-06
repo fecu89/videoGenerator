@@ -29,6 +29,8 @@ def signature(path):
 
 def describe_postprocess(command):
     """Describe observed work without inventing a percentage for FFmpeg/QA."""
+    if '/shorts/' in command:
+        return '쇼츠 만들기', '완성된 영상으로 언어별 세로 쇼츠를 만들고 있습니다.'
     if '/onlineReferences/' in command:
         return '장면별 참고 클립 만들기', '완성된 영상에서 장면별 클립을 추출하고 있습니다.'
     if '/previews/half-second/' in command:
@@ -67,6 +69,14 @@ class ProgressMonitor:
         current = self.process_info()
         return bool(current and current.rsplit(None, 1)[0] == self.process_identity.rsplit(None, 1)[0]
                     and not current.split()[-1].startswith('Z'))
+
+    def upload(self):
+        """Copy-ready titles and descriptions for the finished film; empty when they cannot be read."""
+        from .upload_text import upload_sheet
+        try:
+            return upload_sheet(self.run)
+        except (OSError, ValueError, KeyError) as error:
+            return {'title': self.run.name, 'warnings': [f'업로드 문구를 만들지 못했습니다: {error}'], 'languages': []}
 
     def postprocess(self):
         result = subprocess.run(['ps', '-axo', 'pid=,ppid=,command='], capture_output=True, text=True)
@@ -130,7 +140,13 @@ def handler_for(monitor):
             elif path == '/':
                 self.send_data((Path(__file__).parent / 'progress_web/index.html').read_bytes(), 'text/html; charset=utf-8')
             elif path == '/video.mp4' and monitor.status()['state'] == 'complete':
-                self.send_video()
+                self.send_video(monitor.video)
+            elif path == '/api/upload' and monitor.quality == 'final' and monitor.status()['state'] == 'complete':
+                self.send_data(json.dumps(monitor.upload(), ensure_ascii=False).encode(), 'application/json')
+            elif (short := re.fullmatch(r'/shorts/([a-z-]{2,8})\.mp4', path)) and monitor.status()['state'] == 'complete':
+                from .shorts import SHORTS_DIR, shorts_name
+                file = monitor.run / SHORTS_DIR / shorts_name(short[1], monitor.quality)
+                self.send_video(file) if file.is_file() else self.send_error(404)
             else:
                 self.send_error(404)
 
@@ -142,8 +158,8 @@ def handler_for(monitor):
             self.end_headers()
             self.wfile.write(data)
 
-        def send_video(self):
-            size = monitor.video.stat().st_size
+        def send_video(self, video):
+            size = video.stat().st_size
             start, end = 0, size - 1
             requested = self.headers.get('Range')
             if requested:
@@ -164,7 +180,7 @@ def handler_for(monitor):
                 self.send_header('Content-Range', f'bytes {start}-{end}/{size}')
             self.end_headers()
             try:
-                with monitor.video.open('rb') as source:
+                with video.open('rb') as source:
                     source.seek(start)
                     remaining = end - start + 1
                     while remaining:

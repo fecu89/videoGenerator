@@ -377,6 +377,12 @@ effective settings의 `voice.min_scene_seconds`~`voice.max_scene_seconds`를
   - `causal_clarity`
   - `evidence_quality`
 - `selected_topic`: 선택한 제목과 구체적인 선정 이유
+- `shorts_title`: 쇼츠 화면 위에 계속 떠 있는 한 줄 제목(40자 이내, 한 줄에 들어가게 짧게)
+- `upload_description`: 유튜브 설명란 첫머리에 넣을 2~3문장 소개. 출처 표기는 하네스가 붙인다.
+- 각 장면의 `in_shorts`: 쇼츠에 남길 장면은 `true`, 생략할 장면은 `false`.
+  쇼츠는 핵심 질문과 답만 남긴다. 보충 설명·곁가지·반복 정리는 생략하되,
+  남긴 장면만 차례로 이어 들어도 문장이 자연스럽게 이어져야 한다.
+  남긴 장면의 길이 합은 유튜브 쇼츠 한도(3분) 안이어야 하며 넘으면 대본 승인이 막힌다.
 - `story_engine`: 스키마 호환용 핵심 구조
 - `scenes`: 연속된 번호의 최종 나레이션
 - `fact_checks`: 확인이 남은 주장만 기록

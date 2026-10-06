@@ -34,6 +34,8 @@ COMMANDS: dict[str, Callable[[Sequence[str] | None], int]] = {
     "review-shot": _command("production_render", "review_main"),
     "produce-local": _command("produce_local", "main"),
     "produce": _command("pipeline", "main"),
+    "shorts": _command("shorts", "main"),
+    "upload-text": _command("upload_text", "main"),
     "settings": _command("settings_cli", "main"),
     "settings-ui": _command("settings_ui", "main"),
     "benchmark-render": _command("render_benchmark", "main"),
