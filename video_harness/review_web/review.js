@@ -76,16 +76,17 @@ async function save(action = 'save') {
     dirty = JSON.stringify(snapshot.comments) !== JSON.stringify(comments) || snapshot.overall !== $('overall').value || snapshot.visual_brief !== $('visual-brief').value;
     $('save-status').textContent = dirty ? '저장하지 않은 수정 의견' : result.status === 'approved' ? '승인 완료' : action === 'regenerate' ? '재생성 요청 접수됨' : '수정 의견 저장됨';
     notice('');
-    if (result.closing) return finish();
+    if (result.closing) return finish(action);
   } catch (error) { $('save-status').textContent = action === 'save' ? '저장 실패' : '검토 요청 처리 실패'; notice(error.message); }
   finally { if (!closed) { busy = false; $('save').disabled = false; updateCounts(); } }
 }
-function finish() {
-  // The server stops after an approval, so nothing on this page works any more.
+function finish(action) {
+  // The server stops after an approval or a rebuild request, so nothing on this page works any more.
   closed = true; dirty = false;
   const label = data.mode === 'story' ? '대본' : '프리뷰';
   const box = node('main', null, 'finished');
-  box.append(node('h1', `${label} 승인 완료`), node('p', '검토 화면을 닫습니다. 창이 닫히지 않으면 직접 닫아 주세요.'));
+  if (action === 'regenerate') box.append(node('h1', '프리뷰 다시 만들기 요청 완료'), node('p', '수정 의견을 반영한 새 프리뷰가 준비되면 검토 화면이 다시 열립니다. 창이 닫히지 않으면 직접 닫아 주세요.'));
+  else box.append(node('h1', `${label} 승인 완료`), node('p', '검토 화면을 닫습니다. 창이 닫히지 않으면 직접 닫아 주세요.'));
   document.body.replaceChildren(box);
   window.setTimeout(() => window.close(), 250);
 }

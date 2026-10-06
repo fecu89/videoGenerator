@@ -67,7 +67,7 @@
     "duration_tolerance_seconds": 0.05
   },
   "music": {
-    "file": "",
+    "file": "Reviver - The Grey Room _ Density & Time.mp3",
     "gain_db": -6.5,
     "duck_db": -11.0,
     "fade_seconds": 1.0,

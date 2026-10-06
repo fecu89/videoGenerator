@@ -19,7 +19,11 @@ def main():
     path=Path(sys.argv[sys.argv.index('--')+1])
     job=json.loads(path.read_text())
     gallery_class=SpectralGallery
-    if job.get('scene_graph')=='saturn-rings-blender-v1':
+    if job.get('scene_graph')=='typhoon-beta-blender-v1':
+        from typhoon_beta import TyphoonBetaGallery
+        from typhoon_beta_math import validate_job as validate_typhoon_beta_job
+        validate_typhoon_beta_job(job);gallery_class=TyphoonBetaGallery
+    elif job.get('scene_graph')=='saturn-rings-blender-v1':
         from saturn_rings import SaturnRingsGallery
         from saturn_rings_math import validate_job as validate_saturn_rings_job
         validate_saturn_rings_job(job);gallery_class=SaturnRingsGallery

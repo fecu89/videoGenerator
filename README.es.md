@@ -120,10 +120,10 @@ Antes de dibujar el vídeo entero, primero ves unos cuantos fotogramas represent
 Arriba a la derecha hay tres botones.
 
 - **수정 의견 저장** (Guardar comentarios): solo guarda los comentarios.
-- **수정 반영 후 프리뷰 다시 만들기** (Aplicar cambios y rehacer la vista previa): guarda los comentarios y pide una vista previa nueva. Después de pulsarlo, dile al agente «he enviado comentarios sobre la vista previa».
+- **수정 반영 후 프리뷰 다시 만들기** (Aplicar cambios y rehacer la vista previa): guarda los comentarios y pide una vista previa nueva. Al pulsarlo se cierra la página. Si el agente no continúa enseguida, dile «he enviado comentarios sobre la vista previa».
 - **프리뷰 승인** (Aprobar vista previa): cuando esté bien tal cual. Al aprobar se cierra la página. No se puede pulsar mientras haya comentarios escritos.
 
-Cuando el agente haga los cambios, en la parte superior de la página aparece **새 프리뷰 보기** (Ver la nueva vista previa). Repite hasta que te convenza.
+Cuando el agente haga los cambios, la página de revisión se abre de nuevo con la vista previa nueva. Repite hasta que te convenza.
 
 Las imágenes de la vista previa se dibujan pequeñas (384 píxeles en el lado largo). Sirven para comprobar rápido, así que los detalles pueden verse borrosos.
 

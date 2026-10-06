@@ -186,7 +186,7 @@ def save_feedback(run, payload, mode='preview'):
     if action == 'regenerate':
         request = dict(schema_version=1, request_id=secrets.token_hex(12), status='queued',
                        requested_at=record['saved_at'], source_revision=record['revision'],
-                       feedback=record, message='수정 반영 대기 중')
+                       feedback=dict(record), message='수정 반영 대기 중')   # a copy: the reply nests this request
         atomic_write(run / REGENERATION_FILE, json.dumps(request, ensure_ascii=False, indent=2) + '\n')
         record['regeneration'] = request
     return record
@@ -273,12 +273,13 @@ class ReviewHandler(BaseHTTPRequestHandler):
             with self.server.save_lock:
                 result = save_feedback(self.server.run, payload, self.server.mode)
             print(f'검토 입력 저장: {self.server.mode}-feedback.json ({result["status"]})', flush=True)
-            # Approval ends this review: tell the page to close and stop serving,
-            # so the waiting agent is released like the settings screen does.
-            closing = result['status'] == 'approved'
+            # An approval or a rebuild request ends this review: tell the page to close
+            # and stop serving, so the waiting agent is released like the settings screen does.
+            rebuild = payload.get('action') == 'regenerate'
+            closing = result['status'] == 'approved' or rebuild
             self.send(200, {**result, 'closing': closing})
             if closing:
-                print('승인 완료: 검토 화면을 닫습니다.', flush=True)
+                print('프리뷰 재생성 요청: 검토 화면을 닫습니다.' if rebuild else '승인 완료: 검토 화면을 닫습니다.', flush=True)
                 threading.Thread(target=self.server.shutdown, daemon=True).start()
         except (ValueError, OSError) as error:
             self.send(400, {'error': str(error)})

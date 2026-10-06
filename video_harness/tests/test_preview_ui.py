@@ -191,6 +191,25 @@ def test_story_approval_closes_the_review_server(tmp_path, monkeypatch):
         thread.join()
 
 
+def test_rebuild_request_closes_the_review_server(tmp_path):
+    write_run(tmp_path)
+    server = ReviewServer(tmp_path)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        data = json.load(urlopen(server.origin + '/api/review'))
+        body = json.dumps({'revision': data['revision'], 'comments': {'1': '화살표를 길게'}, 'action': 'regenerate'}).encode()
+        result = json.load(urlopen(Request(server.origin + '/api/feedback', data=body, headers={
+            'Content-Type': 'application/json', 'Origin': server.origin, 'X-Review-Token': data['token']})))
+        assert result['regeneration']['status'] == 'queued' and result['closing'] is True
+        thread.join(timeout=5)
+        assert not thread.is_alive()
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join()
+
+
 def test_preview_command_opens_review_after_render(tmp_path, monkeypatch):
     from types import SimpleNamespace
     from video_harness import preview, preview_ui

@@ -120,10 +120,10 @@ Before the whole video is rendered, you first see a few key frames for each scen
 There are three buttons at the top right.
 
 - **수정 의견 저장** (Save feedback): saves your feedback only.
-- **수정 반영 후 프리뷰 다시 만들기** (Apply changes and rebuild preview): saves your feedback and requests a new preview. After pressing it, tell the agent "I submitted preview feedback".
+- **수정 반영 후 프리뷰 다시 만들기** (Apply changes and rebuild preview): saves your feedback and requests a new preview. Pressing it closes the page. If the agent doesn't pick it up right away, tell it "I submitted preview feedback".
 - **프리뷰 승인** (Approve preview): when it's good as is. Approving closes the page. It can't be pressed while feedback is written.
 
-After the agent makes changes, **새 프리뷰 보기** (View new preview) appears at the top of the page. Repeat until you're happy.
+After the agent makes changes, the review page opens again with the new preview. Repeat until you're happy.
 
 Preview images are rendered small (384 pixels on the long side). They are for quick checking, so details may look blurry.
 
