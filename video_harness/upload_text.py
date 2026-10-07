@@ -2,7 +2,7 @@
 
 Every description ends with the credits the run actually owes: the 3D models in the run's
 `assets/` folder (title, creator, source and licence read from each GLB file), the
-background music and the voice models. The titles and description are the ones written
+and the background music. The titles and description are the ones written
 with the script and their translations in `translations.json`.
 """
 from __future__ import annotations
@@ -16,7 +16,6 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-from .language_voices import load_language_voices
 from .localize import MASTER, language_outputs
 from .models import ScriptArtifact
 from .settings import resolve_run_settings
@@ -26,11 +25,11 @@ from .translations import TRANSLATIONS_FILENAME, Translations, load_translations
 
 UPLOAD_FILENAME = "upload.md"
 LABELS = {
-    "ko": ("한국어", "3D 모델 (수정하여 사용)", "배경음악", "내레이션: AI 음성 합성"),
-    "en": ("English", "3D models (modified)", "Music", "Narration: AI-generated voice"),
-    "ja": ("日本語", "3Dモデル（改変して使用）", "BGM", "ナレーション：AI音声合成"),
-    "zh": ("中文", "3D模型（经修改后使用）", "背景音乐", "旁白：AI语音合成"),
-    "es": ("Español", "Modelos 3D (modificados)", "Música", "Narración: voz generada por IA"),
+    "ko": ("한국어", "3D 모델 (수정하여 사용)", "배경음악"),
+    "en": ("English", "3D models (modified)", "Music"),
+    "ja": ("日本語", "3Dモデル（改変して使用）", "BGM"),
+    "zh": ("中文", "3D模型（经修改后使用）", "背景音乐"),
+    "es": ("Español", "Modelos 3D (modificados)", "Música"),
 }
 
 
@@ -110,8 +109,8 @@ def credit_warnings(credits: Sequence[ModelCredit]) -> list[str]:
     return warnings
 
 
-def credits_block(lang: str, credits: Sequence[ModelCredit], music: str | None, voice_model: str | None) -> str:
-    _, models_label, music_label, voice_label = LABELS.get(lang, LABELS["en"])
+def credits_block(lang: str, credits: Sequence[ModelCredit], music: str | None) -> str:
+    _, models_label, music_label = LABELS.get(lang, LABELS["en"])
     lines: list[str] = []
     if credits:
         lines.append(models_label)
@@ -120,8 +119,6 @@ def credits_block(lang: str, credits: Sequence[ModelCredit], music: str | None, 
         lines.extend(f"{name}: {url}" for name, url in sorted(licenses.items()))
     if music:
         lines.extend(([""] if lines else []) + [f"{music_label}: {music}"])
-    if voice_model:
-        lines.extend(([""] if lines else []) + [f"{voice_label} ({voice_model})"])
     return "\n".join(lines)
 
 
@@ -154,7 +151,6 @@ def upload_sheet(run_dir: Path) -> dict:
     settings = resolve_run_settings(run, persist=False)
     languages = language_outputs(settings) or [MASTER]
     translations = load_translations(run) if (run / TRANSLATIONS_FILENAME).is_file() else None
-    voices = load_language_voices(run).voices
     credits = model_credits(run)
     music_file = getattr(getattr(settings, "music", None), "file", "") or ""
     music = Path(music_file).stem if music_file.strip() else None
@@ -163,8 +159,7 @@ def upload_sheet(run_dir: Path) -> dict:
     entries = []
     for lang in languages:
         title, description = _texts(script, translations, lang, overrides)
-        voice_model = getattr(settings.voice, "model_id", None) if lang == MASTER else getattr(voices.get(lang), "model_id", None)
-        block = credits_block(lang, credits, music, voice_model)
+        block = credits_block(lang, credits, music)
         entry = {"lang": lang, "name": LABELS.get(lang, (lang,))[0], "title": title,
                  "description": "\n\n".join(part for part in (description, block) if part),
                  "shorts_title": None, "shorts_description": None}
