@@ -411,6 +411,13 @@ def _after_final(run_dir: Path) -> int:
     except (OSError, ValueError) as error:
         print(f"upload text failed (final video is complete): {error}")
         status = 1
+    if status == 0:
+        from .delivery import run_delivery
+        try:
+            status = run_delivery(run_dir, automatic=True)
+        except OSError:
+            print('delivery failed (final video is complete): local hook could not start')
+            status = 1
     return status
 
 

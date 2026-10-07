@@ -248,12 +248,15 @@ python -m video_harness voice runs/<run>/script.json --target-language all
 언어 음성은 존재·길이·무음·클리핑만 자동 검사하며 청취 검토는 한국어만 한다.
 
 초본·최종 제작의 다국어 산출물은 `local_video.localized_delivery`에 따른다.
-`burned_videos`는 `video-only` 영상 하나에 언어별 음성과 그 언어의 자막을 번인해
-`final-draft-<lang>.mp4`, `final-<lang>.mp4`를 만들고, `audio_tracks`는 자막을
-번인하지 않고 영상과 길이가 같은 언어별 오디오 트랙 `final-<lang>.m4a`
-(초본 `final-draft-<lang>.m4a`)를 만든다. 두 경우 모두 `subtitles/<lang>.ass|.srt`를
-만들고 `subtitle-gate-<lang>.json`, `localization-<quality>-gate.json`으로 길이
-일치와 자막 형식을 검사한다.
+현재 프로젝트 기본값 `videos`는 공통 `video-only` 영상에 언어별 음성·배경음악을
+합쳐 자막 없는 `final-draft-<lang>.mp4`, `final-<lang>.mp4`를 만든다.
+한국어와 추가 언어 en,ja,zh,es를 선택하면 각 언어 MP4 5개를 전달하며 별도 M4A는
+만들지 않는다. `burned_videos`는 같은 언어별 영상에 해당 언어 자막을 번인한다.
+`audio_tracks`는 과거 실행용 영상 하나와 별도 M4A 출력 호환 경로다.
+`final.mp4`는 한국어 기준 영상으로 유지한다. `subtitles/<lang>.ass|.srt`는
+CC 업로드·쇼츠 제작에 사용하며 쇼츠에는 언어별 자막을 번인한다.
+`subtitle-gate-<lang>.json`, `localization-<quality>-gate.json`으로 자막 형식과
+모든 언어 영상의 화면 크기·프레임 수·길이·음성 존재를 검사한다.
 
 ## 7. schema-v2 시퀀스 영상 제작 계획
 
@@ -462,3 +465,23 @@ schema-v1 샷 기반 실행은 기존 `render-production`과 `review-shot` 명�
 `check-creative plan`을 통과한 뒤 검토본을 생성한다.
 초안과 최종 QA는 실제 렌더 변환을 검사하며, 최종 공개 직전 다시 검사한다.
 누락·실패·오래된 검토는 중단 조건이다. 원인을 수정하고 같은 검사를 반복한다.
+
+### 업로드 설명의 홍보 링크
+
+새 실행의 `promotion.base_url`과 `promotion.locale_mode`는 설정 창에서 정하고
+`run-settings.json`에 고정한다. 기본 주소가 비어 있으면 홍보를 넣지 않는다.
+`shared`는 모든 언어에 같은 주소, `language_path`는 한국어에 기본 주소와
+나머지 언어에 `/en`, `/ja`, `/zh`, `/es` 경로를 사용한다. `upload-text`가
+본편·쇼츠 설명에 해당 주소를 넣고 모델·음악 출처는 마지막에 유지한다.
+대본·번역·음성을 홍보 링크 때문에 고치지 않는다. 공용 설정의 기본 주소는
+빈칸이며 개인 홍보 값은 Git 제외 파일 `settings.local.json`에 저장한다.
+
+### 최종 제작 뒤 로컬 전달
+
+`produce --quality final`은 최종 검사·쇼츠·업로드 문구 생성이 모두 성공하면
+선택적 로컬 전달 모듈을 자동 호출한다. `.local-integrations/`의 구현·인증·설정·
+토큰은 Git 제외 대상이며 공개 하네스에는 호출 연결부만 둔다. 모듈이 없으면
+영상 제작은 그대로 완료한다. 전달 실패 시 영상을 다시 렌더하지 않고
+`delivery-report.json`을 확인한 뒤 `python -m video_harness deliver runs/<run>`으로
+재시도한다. 외부 게시 완료는 별도 보고서의 성공 상태와 실제 URL을 확인해 알린다.
+사용자가 승인한 로컬 업로더 설정에 따라 동작하며 초본은 업로드하지 않는다.

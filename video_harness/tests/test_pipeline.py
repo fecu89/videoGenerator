@@ -143,7 +143,7 @@ def test_produce_refuses_to_start_without_current_video_plan_approval(
         require_current_video_plan_approval,
     )
 
-    with pytest.raises(ValueError, match="영상 생성대본 승인이 없습니다"):
+    with pytest.raises(ValueError, match="영상 계획 검증 기록이 없습니다"):
         produce(tmp_path, output_mode="all")
 
     assert pipeline_spies.prompt == 0

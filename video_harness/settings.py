@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import ClassVar, Literal
 
-from pydantic import ConfigDict, Field, model_validator
+from pydantic import ConfigDict, Field, HttpUrl, TypeAdapter, field_validator, model_validator
 
 from .models import StrictModel
 from .storage import atomic_write
@@ -17,7 +17,7 @@ VariantMode = Literal["four", "balanced_only"]
 VoiceGenerationPreset = Literal["consistent", "custom"]
 VoiceEmotionMode = Literal["script_only", "off"]
 TextPolicy = Literal["legacy", "keywords", "subtitles"]
-LocalizedDelivery = Literal["burned_videos", "audio_tracks"]
+LocalizedDelivery = Literal["burned_videos", "videos", "audio_tracks"]
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 PROJECT_SETTINGS_FILE = PROJECT_ROOT / "settings.json"
@@ -149,7 +149,7 @@ class LocalVideoSettings(StrictModel):
     target_beat_max_seconds: float = Field(default=0, ge=0, le=30)
     text_policy: TextPolicy = "legacy"
     subtitle_languages: str = ""
-    # burned_videos: one subtitle-burned video per language. audio_tracks: subtitle-free video + per-language audio + subtitle files.
+    # videos: narrated MP4 per language without burned subtitles; audio_tracks is historical delivery.
     localized_delivery: LocalizedDelivery = "burned_videos"
 
 
@@ -220,9 +220,33 @@ class ArchivedV5HarnessSettings(StrictModel):
         return self
 
 
+class PromotionSettings(StrictModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    base_url: str = ""
+    locale_mode: Literal["shared", "language_path"] = "shared"
+
+    @field_validator("base_url")
+    @classmethod
+    def validate_base_url(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            return ""
+        url = TypeAdapter(HttpUrl).validate_python(value)
+        if url.username or url.password or url.query is not None or url.fragment is not None:
+            raise ValueError("홍보 주소는 로그인 정보·쿼리·앵커 없는 HTTP(S) 주소를 입력하세요.")
+        return str(url).rstrip("/")
+
+    def url_for(self, lang: str) -> str:
+        if not self.base_url or self.locale_mode == "shared" or lang == "ko":
+            return self.base_url
+        return f"{self.base_url}/{lang}"
+
+
 class HarnessSettings(ArchivedV5HarnessSettings):
     schema_version: Literal[6] = 6
     render: RenderSettings = Field(default_factory=RenderSettings)
+    promotion: PromotionSettings = Field(default_factory=PromotionSettings)
 
 
 class ArchivedV4HarnessSettings(ArchivedV5HarnessSettings):
@@ -293,6 +317,12 @@ def load_project_settings(settings_file: Path | None = None) -> HarnessSettings:
         payload["schema_version"] = 6
         for key in ("draft_width", "draft_height", "draft_fps", "preview_interval_seconds", "contact_sheet_columns"):
             payload["render"].pop(key)
+    local_path = path.with_name(f"{path.stem}.local{path.suffix}")
+    if local_path.is_file():
+        local = json.loads(local_path.read_text(encoding="utf-8"))
+        if not isinstance(local, dict) or set(local) != {"promotion"}:
+            raise ValueError(f"{local_path.name}에는 promotion 설정만 저장할 수 있습니다.")
+        payload["promotion"] = local["promotion"]
     return HarnessSettings.model_validate(payload)
 
 
@@ -301,12 +331,20 @@ def write_project_settings(
     settings_file: Path | None = None,
 ) -> Path:
     path = settings_file if settings_file is not None else PROJECT_SETTINGS_FILE
-    atomic_write(path, settings.model_dump_json(indent=2) + "\n")
+    # Personal promotion is never written into the shared project configuration.
+    values = settings.model_dump(mode="json")
+    personal = values["promotion"]
+    values["promotion"] = PromotionSettings().model_dump(mode="json")
+    local_path = path.with_name(f"{path.stem}.local{path.suffix}")
+    atomic_write(local_path, json.dumps({"promotion": personal}, ensure_ascii=False, indent=2) + "\n")
+    atomic_write(path, json.dumps(values, ensure_ascii=False, indent=2) + "\n")
     return path
 
 
 def settings_sha256(settings: ResolvedHarnessSettings) -> str:
     values = settings.model_dump(mode="json")
+    if values.get("promotion") == PromotionSettings().model_dump(mode="json"):
+        values.pop("promotion")
     if values.get('voice', {}).get('pause_mode') == 'legacy':
         from .voice_pauses import PAUSE_FIELDS
         for key in PAUSE_FIELDS:

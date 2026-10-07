@@ -147,8 +147,12 @@ SETTINGS_CATALOG = (
     _select("local_video.text_policy", "output", "화면 설명 글자", "장면 안의 설명 글자를 정합니다. 나레이션 자막은 아래에서 따로 선택합니다.",
             _option("subtitles", "설명 글자 없음"), _option("keywords", "핵심 단어 라벨"), _option("legacy", "기존 방식 유지")),
     _text("local_video.subtitle_languages", "output", "추가 언어", "en,ja,zh,es처럼 입력합니다. 비우면 한국어만 만듭니다."),
-    _select("local_video.localized_delivery", "output", "자막·언어별 출력", "설명 글자 없음 모드에서 적용됩니다. 자막을 영상에 표시하거나, 영상에는 넣지 않고 파일로 따로 만듭니다.",
-            _option("burned_videos", "자막이 있는 언어별 영상"), _option("audio_tracks", "영상에 자막 없음 · 음성/자막 파일 따로")),
+    _select("local_video.localized_delivery", "output", "자막·언어별 출력", "설명 글자 없음 모드에서 적용됩니다. 언어별 음성과 배경음악이 포함된 영상을 만들고 자막 표시 여부를 고릅니다.",
+            _option("videos", "자막 없는 언어별 영상"), _option("burned_videos", "자막이 있는 언어별 영상"),
+            _option("audio_tracks", "기존 방식 · 영상에 자막 없음 · 음성/자막 파일 따로")),
+    _text("promotion.base_url", "output", "홍보 웹사이트 주소", "유튜브 본편·쇼츠 설명에 넣을 주소입니다. 비우면 홍보 링크를 넣지 않습니다."),
+    _select("promotion.locale_mode", "output", "홍보 주소 언어별 경로", "언어별 경로를 선택하면 한국어는 기본 주소, 다른 언어는 /en, /ja, /zh, /es를 붙입니다.",
+            _option("shared", "모든 언어에서 같은 주소"), _option("language_path", "언어 코드를 경로에 추가")),
     _select("pipeline.output_mode", "output", "생성 범위", "특정 산출물만 필요할 때 변경합니다.",
             _option("all", "전체 생성"), _option("video_only", "영상만"), _option("prompts_only", "프롬프트만"), advanced=True),
     _select("pipeline.variant_mode", "output", "편집본 구성", "보통은 균형본 하나로 충분합니다.",
@@ -229,7 +233,7 @@ def settings_catalog_payload() -> list[dict[str, object]]:
     return [
         {
             **asdict(item),
-            "allow_empty": item.key in {"local_video.subtitle_languages", "music.file"},
+            "allow_empty": item.key in {"local_video.subtitle_languages", "music.file", "promotion.base_url"},
             "options": [asdict(option) for option in item.options],
         }
         for item in SETTINGS_CATALOG

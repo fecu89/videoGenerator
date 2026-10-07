@@ -63,3 +63,10 @@ venv/
 *.mp3
 *.wav
 *.usdz
+
+client_secret.json
+.env
+/settings.local.json
+/.local-integrations/
+/client_secret*.json
+/token*.json

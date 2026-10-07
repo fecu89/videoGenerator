@@ -458,7 +458,7 @@ def _current_owned_public_files(run_dir: Path) -> set[str]:
         if _lstat(run_dir / relative) is not None:
             files.add(relative)
     # Language layers: final-<lang>.mp4 / final-draft-<lang>.mp4 are owned so dropped languages get swept.
-    for pattern in ("final-*.mp4", "final-draft-*.mp4"):
+    for pattern in ("final-*.mp4", "final-draft-*.mp4", "final-*.m4a", "final-draft-*.m4a"):
         files.update(path.name for path in run_dir.glob(pattern) if path.is_file() and not path.is_symlink() and path.name != "final-draft.mp4")
     return files
 
@@ -743,7 +743,7 @@ def write_local_production_report(
 
 
 def _localize_stage(context, report, *, quality, root, settings, fps=None, width=None, height=None) -> None:
-    """Language layers (audio + burned subtitles) on the stage's video master; no-op unless the run is a subtitle run."""
+    """Build narrated language outputs with optional subtitles from the stage's visual master."""
     from .localize import delivery_mode, language_outputs, localize_outputs, require_localization
     from .media import probe_media
     languages = language_outputs(settings)

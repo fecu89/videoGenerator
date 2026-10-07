@@ -145,7 +145,7 @@ Blender는 [blender.org](https://www.blender.org/download/)에서 받아 응용 
 | 파일 | 내용 |
 |---|---|
 | `final.mp4` | 완성 영상 (한국어 음성, 배경음악) |
-| `final-en.m4a` 등 | 언어별 음성 트랙. 설정에 따라 언어별 영상 `final-en.mp4`로 나오기도 합니다 |
+| `final-<lang>.mp4` | 한국어·영어·일본어·중국어·스페인어 음성과 음악이 포함된 영상. 본편 자막은 선택하며 별도 음성 트랙은 과거 실행에서만 사용합니다 |
 | `subtitles/` | 언어별 자막 파일 (`.srt`, `.ass`) |
 | `video-only.mp4` | 소리 없는 영상 |
 | `final-draft.mp4` | 5단계에서 확인한 초본 |

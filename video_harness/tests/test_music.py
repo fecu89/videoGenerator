@@ -33,6 +33,7 @@ def test_music_settings_default_off_and_hash_excluded():
     for key in ("text_policy", "subtitle_languages", "localized_delivery", "camera_transition_seconds"):
         values["local_video"].pop(key)
     values.pop("music")
+    values.pop("promotion")
     values.pop("pacing")
     values["local_video"].pop("target_beat_min_seconds")
     values["local_video"].pop("target_beat_max_seconds")

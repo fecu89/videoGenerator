@@ -35,11 +35,13 @@ python -m video_harness produce runs/<run>
 장면 길이에 맞춰 속도 보정(`voice.max_tempo_factor` 상한)되며 넘치면 그 장면 번역을 줄인다.
 번역과 다른 언어 음성에는 사용자 승인·청취 검토가 없고 게이트만 통과하면 된다.
 완성 단계의 다국어 산출물은 설정 `local_video.localized_delivery`로 정한다.
-`burned_videos`(기본)는 `final.mp4`(한국어, 자막 없음)와 함께 언어별로 자막을
-번인한 `final-ko.mp4`, `final-en.mp4`, `final-ja.mp4`, `final-zh.mp4`,
-`final-es.mp4`를 같은 길이로 만든다. `audio_tracks`는 자막 없는 `final.mp4`
-하나에 영상과 길이가 같은 언어별 오디오 트랙 `final-<lang>.m4a`를 낸다. 두 경우
-모두 `subtitles/<lang>.srt|.ass`를 함께 만들고 배경음악·더킹은 동일하게 적용한다.
+현재 프로젝트 기본값 `videos`는 한국어·영어·일본어·중국어·스페인어 음성과
+배경음악이 각각 포함된 자막 없는 `final-ko.mp4`, `final-en.mp4`, `final-ja.mp4`,
+`final-zh.mp4`, `final-es.mp4`를 같은 길이로 만든다. 별도 M4A는 만들지 않는다.
+`burned_videos`는 같은 언어별 영상에 자막을 번인한다. `final.mp4`는 한국어
+검증·쇼츠 제작용 기준 영상으로 유지하고, 전달은 언어별 MP4를 기준으로 한다.
+`subtitles/<lang>.srt|.ass`는 CC 업로드·쇼츠 제작용으로 보관한다.
+과거 실행의 `audio_tracks`는 기존 영상 하나와 언어별 M4A 출력 방식을 유지한다.
 사용자는 실행을 시작할 때 설정 화면에서 이 값을 고른다.
 
 설정 승인, 과거의 일반적인 “진행해”, 침묵은 대본 승인이 아니다. 승인 뒤에
@@ -153,3 +155,23 @@ FFmpeg 호출은 필요한 하네스 코드다. 렌더러 선택은 계획에 �
 `story-chain.json`과 `continuity-plan.json`의 현재 검토가 없거나 실패하면
 다음 제작 단계로 나가지 않는다. 실패 항목을 고치고 재검사할 때까지 반복한다.
 `--force`로 우회하거나 실패한 완성본을 전달하지 않는다.
+
+### 업로드 설명의 홍보 링크
+
+새 실행의 `promotion.base_url`과 `promotion.locale_mode`는 설정 창에서 정하고
+`run-settings.json`에 고정한다. 기본 주소가 비어 있으면 홍보를 넣지 않는다.
+`shared`는 모든 언어에 같은 주소, `language_path`는 한국어에 기본 주소와
+나머지 언어에 `/en`, `/ja`, `/zh`, `/es` 경로를 사용한다. `upload-text`가
+본편·쇼츠 설명에 해당 주소를 넣고 모델·음악 출처는 마지막에 유지한다.
+대본·번역·음성을 홍보 링크 때문에 고치지 않는다. 공용 설정의 기본 주소는
+빈칸이며 개인 홍보 값은 Git 제외 파일 `settings.local.json`에 저장한다.
+
+### 최종 제작 뒤 로컬 전달
+
+`produce --quality final`은 최종 검사·쇼츠·업로드 문구 생성이 모두 성공하면
+선택적 로컬 전달 모듈을 자동 호출한다. `.local-integrations/`의 구현·인증·설정·
+토큰은 Git 제외 대상이며 공개 하네스에는 호출 연결부만 둔다. 모듈이 없으면
+영상 제작은 그대로 완료한다. 전달 실패 시 영상을 다시 렌더하지 않고
+`delivery-report.json`을 확인한 뒤 `python -m video_harness deliver runs/<run>`으로
+재시도한다. 외부 게시 완료는 별도 보고서의 성공 상태와 실제 URL을 확인해 알린다.
+사용자가 승인한 로컬 업로더 설정에 따라 동작하며 초본은 업로드하지 않는다.

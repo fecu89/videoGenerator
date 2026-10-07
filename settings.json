@@ -50,7 +50,7 @@
     "target_beat_max_seconds": 6.0,
     "text_policy": "subtitles",
     "subtitle_languages": "en,ja,zh,es",
-    "localized_delivery": "audio_tracks"
+    "localized_delivery": "videos"
   },
   "render": {
     "final_width": 1920,
@@ -72,5 +72,9 @@
     "duck_db": -11.0,
     "fade_seconds": 1.0,
     "loop_mode": "loop"
+  },
+  "promotion": {
+    "base_url": "",
+    "locale_mode": "shared"
   }
 }

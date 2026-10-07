@@ -110,17 +110,21 @@ def test_cues_rewrap_for_portrait_and_ass_retimes_for_speed(tmp_path):
 
 
 @pytest.mark.skipif(shutil.which('ffmpeg') is None, reason='ffmpeg required')
-def test_build_shorts_makes_one_portrait_video_per_language_and_upload_sheet_lists_them(tmp_path):
+@pytest.mark.parametrize('delivery', ['audio_tracks', 'videos'])
+def test_build_shorts_makes_one_portrait_video_per_language_and_upload_sheet_lists_them(tmp_path, delivery):
     script, translations = titled_run(tmp_path, languages='en')
     translations.title, translations.shorts_title, translations.description = {'en': 'Why Typhoons Turn'}, {'en': 'Why Northwest'}, {'en': 'Trade winds and the beta effect.'}
     write_translations(tmp_path, translations, force=True)
     settings = json.loads((tmp_path / 'run-settings.json').read_text())
-    settings['local_video']['localized_delivery'] = 'audio_tracks'
+    settings['local_video']['localized_delivery'] = delivery
     (tmp_path / 'run-settings.json').write_text(json.dumps(settings))
     subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', '-f', 'lavfi', '-i', 'testsrc=size=320x180:rate=30:duration=2.3',
                     '-f', 'lavfi', '-i', 'sine=frequency=440:duration=2.3', '-shortest', '-pix_fmt', 'yuv420p', str(tmp_path / 'final.mp4')], check=True)
     for lang in ('ko', 'en'):
-        subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', '-i', str(tmp_path / 'final.mp4'), '-vn', '-c:a', 'copy', str(tmp_path / f'final-{lang}.m4a')], check=True)
+        if delivery == 'audio_tracks':
+            subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', '-i', str(tmp_path / 'final.mp4'), '-vn', '-c:a', 'copy', str(tmp_path / f'final-{lang}.m4a')], check=True)
+        else:
+            shutil.copyfile(tmp_path / 'final.mp4', tmp_path / f'final-{lang}.mp4')
         (tmp_path / 'subtitles').mkdir(exist_ok=True)
         (tmp_path / 'subtitles' / f'{lang}.srt').write_text(SRT.format(a='One', b='two.', c='Three.'))
     write_glb(tmp_path / 'assets' / 'earth.glb', {'author': 'Akshat (https://sketchfab.com/shooter24994)', 'title': 'Earth',
@@ -166,14 +170,17 @@ def test_final_produce_makes_shorts_and_upload_text_but_draft_does_not(tmp_path,
     monkeypatch.setattr(pipeline, 'produce', lambda run, quality, **_: report(quality))
     monkeypatch.setattr('video_harness.shorts.build_shorts', lambda run, quality: calls.append(('shorts', quality)) or [tmp_path / 'shorts-ko.mp4'])
     monkeypatch.setattr('video_harness.upload_text.write_upload_text', lambda run: calls.append(('upload',)) or tmp_path / 'upload.md')
+    monkeypatch.setattr('video_harness.delivery.run_delivery', lambda run, automatic: calls.append(('deliver', automatic)) or 0)
     assert pipeline.main([str(tmp_path)]) == 0 and calls == []
-    assert pipeline.main([str(tmp_path), '--quality', 'final']) == 0 and calls == [('shorts', 'final'), ('upload',)]
+    assert pipeline.main([str(tmp_path), '--quality', 'final']) == 0 and calls == [('shorts', 'final'), ('upload',), ('deliver', True)]
     assert 'shorts ready' in capsys.readouterr().out
 
     def broken(run, quality):
         raise RuntimeError('ffmpeg')
     monkeypatch.setattr('video_harness.shorts.build_shorts', broken)
+    calls.clear()
     assert pipeline.main([str(tmp_path), '--quality', 'final']) == 1
+    assert not any(call[0] == 'deliver' for call in calls)
     assert 'final video is complete' in capsys.readouterr().out
 
 

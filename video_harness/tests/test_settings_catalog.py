@@ -10,12 +10,12 @@ from video_harness.settings_catalog import (
 def test_catalog_contains_only_supported_operator_choices():
     settings = HarnessSettings().model_dump(mode='json')
     keys = [item.key for item in settings_catalog()]
-    assert len(keys) == len(set(keys)) == 57
+    assert len(keys) == len(set(keys)) == 59
     assert editable_setting_keys() == frozenset(keys)
     for key in keys:
         group, field = key.split('.')
         assert field in settings[group]
-    assert len([item for item in settings_catalog() if not item.advanced]) == 7
+    assert len([item for item in settings_catalog() if not item.advanced]) == 9
     assert all(item.advanced for item in settings_catalog() if item.key.startswith(('render.', 'qa.')))
     assert 'render.draft_width' not in keys
     assert 'voxcpm' not in json.dumps(settings_catalog_payload()).lower()

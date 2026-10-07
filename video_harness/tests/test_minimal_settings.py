@@ -58,7 +58,8 @@ def test_details_are_advanced_but_preview_controls_stay_removed():
     assert set(items) == expected
     basic = {key for key, item in items.items() if not item.advanced}
     assert basic == {'voice.instructions_file', 'voice.emotion_mode', 'music.file', 'music.gain_db',
-                     'local_video.text_policy', 'local_video.subtitle_languages', 'local_video.localized_delivery'}
+                     'local_video.text_policy', 'local_video.subtitle_languages', 'local_video.localized_delivery',
+                     'promotion.base_url', 'promotion.locale_mode'}
     assert items['voice.max_tempo_factor'].section == 'advanced'
     assert items['qa.black_frame_threshold'].section == 'advanced'
     assert 'render.draft_width' not in items

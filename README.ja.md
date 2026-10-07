@@ -147,7 +147,7 @@ Blenderは [blender.org](https://www.blender.org/download/) からダウンロ�
 | ファイル | 内容 |
 |---|---|
 | `final.mp4` | 完成動画(韓国語音声、BGM) |
-| `final-en.m4a` など | 言語別の音声トラック。設定によっては言語別の動画 `final-en.mp4` として出力されます |
+| `final-<lang>.mp4` | 韓国語・英語・日本語・中国語・スペイン語の音声と音楽を含む動画。字幕は選択でき、個別音声トラックは過去の実行用です |
 | `subtitles/` | 言語別の字幕ファイル(`.srt`、`.ass`) |
 | `video-only.mp4` | 音声なしの動画 |
 | `final-draft.mp4` | 段階5で確認した初稿 |

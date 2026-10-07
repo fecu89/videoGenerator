@@ -147,7 +147,7 @@ Each video gets its own `runs/<date>-<topic>/` folder.
 | File | Contents |
 |---|---|
 | `final.mp4` | Finished video (Korean voice, background music) |
-| `final-en.m4a`, etc. | Per-language voice tracks. Depending on settings, these come out as per-language videos such as `final-en.mp4` instead |
+| `final-<lang>.mp4` | Complete videos with narration and music in Korean, English, Japanese, Chinese and Spanish; subtitles are optional. Separate audio tracks are retained only for older runs |
 | `subtitles/` | Per-language subtitle files (`.srt`, `.ass`) |
 | `video-only.mp4` | Video without sound |
 | `final-draft.mp4` | The draft you checked in stage 5 |

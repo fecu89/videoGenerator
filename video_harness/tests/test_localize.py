@@ -1,4 +1,6 @@
 import json
+import shutil
+import subprocess
 from pathlib import Path
 import pytest
 from video_harness import localize
@@ -70,7 +72,8 @@ def test_localize_outputs_muxes_then_burns_each_language(tmp_path, monkeypatch):
     assert json.loads((tmp_path / 'subtitle-gate-en.json').read_text())['status'] == 'passed'
 
 
-def test_require_localization_checks_lengths_and_audio(tmp_path, monkeypatch):
+@pytest.mark.parametrize('delivery', ['burned_videos', 'videos'])
+def test_require_localization_checks_lengths_and_audio(tmp_path, monkeypatch, delivery):
     seeded_run(tmp_path)
     for name in ('final-ko.mp4', 'final-en.mp4'):
         (tmp_path / name).write_bytes(b'x')
@@ -83,11 +86,11 @@ def test_require_localization_checks_lengths_and_audio(tmp_path, monkeypatch):
                          width=0 if audio_only else 160, height=0 if audio_only else 90, fps=0.0 if audio_only else 10.0,
                          duration_seconds=info['duration'], frame_count=info['frames'])
     monkeypatch.setattr(localize, 'probe_media', fake_probe)
-    localize.require_localization(tmp_path, tmp_path, 'final', ['ko', 'en'])
+    localize.require_localization(tmp_path, tmp_path, 'final', ['ko', 'en'], delivery=delivery)
     assert json.loads((tmp_path / 'localization-final-gate.json').read_text())['status'] == 'passed'
     infos['final-en.mp4'] = dict(frames=118, duration=11.8)
     with pytest.raises(ValueError, match='localized_length_mismatch: en'):
-        localize.require_localization(tmp_path, tmp_path, 'final', ['ko', 'en'])
+        localize.require_localization(tmp_path, tmp_path, 'final', ['ko', 'en'], delivery=delivery)
 
 
 def test_owned_public_files_include_language_outputs_and_subtitles(tmp_path):
@@ -96,6 +99,13 @@ def test_owned_public_files_include_language_outputs_and_subtitles(tmp_path):
     (tmp_path / 'subtitles').mkdir(); (tmp_path / 'subtitles' / 'ja.ass').write_text('x'); (tmp_path / 'subtitles' / 'ja.srt').write_text('x')
     (tmp_path / 'final.mp4').write_bytes(b'x')
     assert {'final-ja.mp4', 'final-draft-ja.mp4', 'subtitles/ja.ass', 'subtitles/ja.srt', 'final.mp4'} <= _current_owned_public_files(tmp_path)
+
+
+def test_owned_public_files_include_old_audio_for_delivery_changes(tmp_path):
+    from video_harness.produce_local import _current_owned_public_files
+    for name in ('final-en.m4a', 'final-draft-en.m4a'):
+        (tmp_path / name).write_bytes(b'old audio')
+    assert {'final-en.m4a', 'final-draft-en.m4a'} <= _current_owned_public_files(tmp_path)
 
 
 def test_ass_filter_argument_escapes_special_characters():
@@ -153,7 +163,7 @@ def test_delivery_setting_defaults_to_burned_videos_and_is_hash_excluded():
     assert HarnessSettings().local_video.localized_delivery == 'burned_videos'
     assert settings_module.settings_sha256(HarnessSettings()) != settings_module.settings_sha256(audio_track_settings())
     payload = json.loads((settings_module.PROJECT_ROOT / 'settings.json').read_text())
-    assert payload['local_video']['localized_delivery'] in ('burned_videos', 'audio_tracks')
+    assert payload['local_video']['localized_delivery'] in ('burned_videos', 'videos', 'audio_tracks')
 
 
 def test_audio_track_delivery_names_and_expected_outputs():
@@ -196,3 +206,58 @@ def test_audio_track_delivery_gate_compares_durations_only(tmp_path, monkeypatch
     durations['final-en.m4a'] = 11.5
     with pytest.raises(ValueError, match='localized_length_mismatch: en'):
         localize.require_localization(tmp_path, tmp_path, 'final', ['ko', 'en'], delivery='audio_tracks')
+
+
+@pytest.mark.parametrize('music', [False, True])
+@pytest.mark.parametrize('quality', ['draft', 'final'])
+def test_video_delivery_keeps_language_audio_and_music_without_burning_or_extracting(tmp_path, monkeypatch, music, quality):
+    seeded_run(tmp_path)
+    import video_harness.localize_voice as lv
+    monkeypatch.setattr(lv, 'language_audio_issues', lambda run, lang: [])
+    monkeypatch.setattr(localize, 'resolve_music_file', lambda *args: tmp_path / 'music.mp3' if music else None)
+    monkeypatch.setattr(localize, 'mux_audio_timeline', lambda video, placements, destination, spec, **kw: destination.write_bytes(str(placements[0].source).encode()))
+    monkeypatch.setattr(localize, 'add_music', lambda runner, *, source, destination, **kw: destination.write_bytes(source.read_bytes() + b'+music'))
+    def unexpected_runner(*args, **kwargs):
+        pytest.fail('Video delivery must not burn subtitles or extract audio')
+    settings = HarnessSettings(local_video={'text_policy': 'subtitles', 'subtitle_languages': 'en', 'localized_delivery': 'videos'})
+    outputs = localize.localize_outputs(tmp_path, quality=quality, artifact_root=tmp_path, video_only=tmp_path / 'video-only.mp4',
+                                       scene_audio={1: 'audioFiles/01_a.mp3', 2: 'audioFiles/02_b.mp3'}, settings=settings,
+                                       output_fps=10, width=160, height=90, frame_count=120, runner=unexpected_runner)
+    prefix = 'final' if quality == 'final' else 'final-draft'
+    assert outputs == [f'{prefix}-ko.mp4', f'{prefix}-en.mp4']
+    assert b'audioFiles/en/' in (tmp_path / outputs[1]).read_bytes()
+    assert (tmp_path / outputs[1]).read_bytes().endswith(b'+music') == music
+    assert set(outputs) <= localize.expected_language_outputs(settings)
+    assert not list(tmp_path.glob('*.m4a'))
+    assert not list(tmp_path.glob('*.muxed.mp4')) and not list(tmp_path.glob('*.music.mp4'))
+
+
+@pytest.mark.skipif(not shutil.which('ffmpeg') or not shutil.which('ffprobe'), reason='FFmpeg required')
+def test_five_language_videos_have_identical_picture_and_distinct_audio(tmp_path, monkeypatch):
+    seeded_run(tmp_path)
+    import video_harness.localize_voice as lv
+    monkeypatch.setattr(lv, 'language_audio_issues', lambda run, lang: [])
+    def ffmpeg(*args):
+        return subprocess.run(['ffmpeg', '-v', 'error', '-y', *map(str, args)], check=True, capture_output=True).stdout
+    ffmpeg('-f', 'lavfi', '-i', 'testsrc2=size=160x90:rate=10:duration=12', '-c:v', 'libx264', tmp_path / 'video-only.mp4')
+    languages = ['ko', 'en', 'ja', 'zh', 'es']
+    for index, lang in enumerate(languages):
+        folder = tmp_path / 'audioFiles' / (lang if lang != 'ko' else '')
+        folder.mkdir(exist_ok=True)
+        ffmpeg('-f', 'lavfi', '-i', f'sine=frequency={220 + index * 110}:duration=3', folder / '01_a.mp3')
+        shutil.copyfile(folder / '01_a.mp3', folder / '02_b.mp3')
+        if lang not in ('ko', 'en'):
+            shutil.copyfile(tmp_path / 'voice-generation-report-en.json', tmp_path / f'voice-generation-report-{lang}.json')
+    settings = HarnessSettings(local_video={'text_policy': 'subtitles', 'subtitle_languages': 'en,ja,zh,es', 'localized_delivery': 'videos'})
+    outputs = localize.localize_outputs(tmp_path, quality='final', artifact_root=tmp_path, video_only=tmp_path / 'video-only.mp4',
+                                       scene_audio={1: 'audioFiles/01_a.mp3', 2: 'audioFiles/02_b.mp3'}, settings=settings,
+                                       output_fps=10, width=160, height=90, frame_count=120)
+    assert outputs == [f'final-{lang}.mp4' for lang in languages]
+    master_hash = ffmpeg('-i', tmp_path / 'video-only.mp4', '-map', '0:v', '-c', 'copy', '-f', 'hash', '-')
+    audio_hashes = set()
+    for name in outputs:
+        assert ffmpeg('-i', tmp_path / name, '-map', '0:v', '-c', 'copy', '-f', 'hash', '-') == master_hash
+        audio_hashes.add(ffmpeg('-i', tmp_path / name, '-map', '0:a', '-c', 'copy', '-f', 'hash', '-'))
+    assert len(audio_hashes) == 5
+    assert not list(tmp_path.glob('*.m4a'))
+    localize.require_localization(tmp_path, tmp_path, 'final', languages, delivery='videos')

@@ -53,9 +53,20 @@ class ProgressMonitor:
         self.run, self.staging = Path(run), Path(staging)
         self.pid, self.total, self.quality = pid, total, quality
         self.video = self.run / ('final.mp4' if quality == 'final' else 'final-draft.mp4')
+        self.language_videos = {}
+        if (self.run / 'run-settings.json').is_file():
+            from .localize import delivery_mode, final_name, language_outputs
+            from .settings import resolve_run_settings
+            settings = resolve_run_settings(self.run, persist=False)
+            delivery = delivery_mode(settings)
+            if delivery != 'audio_tracks':
+                self.language_videos = {lang: self.run / final_name(lang, quality, delivery)
+                                        for lang in language_outputs(settings)}
         self.report = self.run / 'pipeline-report.json'
         self.qa = self.run / ('qa-report.json' if quality == 'final' else 'videoFiles/sequences/draft/qa-report.json')
-        self.initial = {p: signature(p) for p in (self.video, self.report, self.qa)}
+        self.initial = {p: signature(p) for p in (self.video, self.report, self.qa, *self.language_videos.values())}
+        self.delivery_report = self.run / 'delivery-report.json'
+        self.initial_delivery = signature(self.delivery_report)
         self.alive = alive or self.process_alive
         self.counts = {}
         self.process_identity = self.process_info()
@@ -109,7 +120,7 @@ class ProgressMonitor:
                 script_hash = hashlib.sha256((self.run / 'script.json').read_bytes()).hexdigest()
             except OSError:
                 script_hash = None
-            valid = (fresh and self.video.stat().st_size > 0 and report.get('quality') == self.quality
+            valid = (fresh and all(p.stat().st_size > 0 for p in (self.video, *self.language_videos.values())) and report.get('quality') == self.quality
                      and report.get('status') == 'complete' and qa.get('status') == 'passed'
                      and script_hash and report.get('script_sha256') == script_hash)
             state = 'complete' if valid else 'stopped'
@@ -119,10 +130,17 @@ class ProgressMonitor:
             if valid:
                 completed = self.total
         stage, detail = self.postprocess() if state == 'finishing' else ('', '')
+        delivery = read_json(self.delivery_report) if signature(self.delivery_report) != self.initial_delivery else {}
+        if state == 'finishing' and delivery.get('status') in ('preparing', 'uploading'):
+            stage = '완성 영상 업로드'
+            done = sum(item.get('status') == 'uploaded' for item in delivery.get('items', []))
+            detail = f'언어별 채널에 영상을 업로드하고 있습니다. 완료 {done}개'
         return {'state': state, 'completed_frames': completed, 'total_frames': self.total,
                 'percent': round(100 * completed / self.total, 1), 'name': self.run.name,
                 'quality': self.quality, 'sequences': self.counts.copy(), 'issues': issues,
-                'stage': stage, 'detail': detail}
+                'stage': stage, 'detail': detail, 'delivery': delivery,
+                'videos': [{'lang': lang, 'file': path.name, 'url': f'/videos/{lang}.mp4'}
+                           for lang, path in self.language_videos.items()] if state == 'complete' else []}
 
 
 def handler_for(monitor):
@@ -141,6 +159,9 @@ def handler_for(monitor):
                 self.send_data((Path(__file__).parent / 'progress_web/index.html').read_bytes(), 'text/html; charset=utf-8')
             elif path == '/video.mp4' and monitor.status()['state'] == 'complete':
                 self.send_video(monitor.video)
+            elif (localized := re.fullmatch(r'/videos/([a-z-]{2,8})\.mp4', path)) and monitor.status()['state'] == 'complete':
+                file = monitor.language_videos.get(localized[1])
+                self.send_video(file) if file and file.is_file() else self.send_error(404)
             elif path == '/api/upload' and monitor.quality == 'final' and monitor.status()['state'] == 'complete':
                 self.send_data(json.dumps(monitor.upload(), ensure_ascii=False).encode(), 'application/json')
             elif (short := re.fullmatch(r'/shorts/([a-z-]{2,8})\.mp4', path)) and monitor.status()['state'] == 'complete':

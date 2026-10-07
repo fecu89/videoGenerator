@@ -11,13 +11,23 @@
       ├─ Blender: MCP 장면 검토 / 백그라운드 Blender 최종 렌더
       └─ Three.js: Playwright Chromium에서 WebGL 렌더
   → FFmpeg 합성 → 실제 프레임·연속성 QA → 저해상도 초본 링크 제공
-  → 피드백 반영·최종 제작 요청 → produce --quality final → 최종본 게시·validate
+  → 피드백 반영·최종 제작 요청 → produce --quality final
+  → 공통 화면 + 언어별 음성·배경음악 → 언어별 MP4 5개 → 검사·게시·validate
+  → 언어별 쇼츠·업로드 문구 → 선택적 로컬 전달 모듈
 ```
 
 실패한 질문 사슬·연속성·미디어 검사를 우회해 다음 단계로 나가지 않는다.
 기존 실행의 계획, 승인 해시, 음성과 완성본은 코드 정리 과정에서 바꾸지 않는다.
 초본 요청에서는 `final-draft.mp4`를 먼저 전달하고 결과를 검토한다. 최종본까지
 이미 제작 지시를 받았어도 초본 전달을 고해상도 렌더 종료까지 미루지 않는다.
+
+다국어 합성은 게시 전에 수행하고 검사한다. 현재 프로젝트의 `localized_delivery: videos`는
+공통 3D 화면을 한 번 렌더하고 한국어·영어·일본어·중국어·스페인어 음성과
+배경음악을 각각 결합해 `final-<lang>.mp4` 5개를 만든다. 영상 스트림은 복사하므로
+언어마다 3D 렌더를 반복하지 않는다. `burned_videos`를 고르면 각 언어 자막도 넣는다.
+`final.mp4`는 한국어 기준 영상으로 유지하며, 완료 화면에서는 각 언어 MP4를 선택해
+재생·저장한다. 자막 파일은 CC 업로드와 쇼츠 제작용이고 새 `videos` 출력에는
+별도 M4A가 없다. 기존 실행의 `audio_tracks` 설정·승인 해시는 그대로 유지한다.
 
 ## 코드의 역할
 
@@ -130,7 +140,7 @@ Qwen은 `instructions_file`의 Sohee 톤 지시에 승인된 문장별 감정 �
 ## 최소 설정 화면과 프리뷰 상수
 
 `settings_catalog.py`는 기본 항목과 접힌 고급 옵션을 구분한다.
-`pacing_presets.py`의 템포와 `output_profiles.py`의 영상 규격을 포함해 기본 9개를
+`pacing_presets.py`의 템포와 `output_profiles.py`의 영상 규격을 포함해 기본 11개를
 보이며, 생성 범위·편집본은 추가 출력 옵션에 둔다. 나머지 모델·음량·템포·렌더·QA
 43개는 고급 옵션에 모아 둔다. 프리뷰 상수와 프리셋 메타데이터 외의 모든 모델 필드는
 카탈로그에서 한 번씩 노출되고 기본·고급 화면의 값은 서로 동기화된다.
@@ -139,3 +149,40 @@ schema-v6의 `RenderSettings`는 최종 출력 크기·FPS와 인코딩 설정�
 프리뷰 크기는 고정 긴 변 384px에서 출력 비율로 계산하고, 9fps·검사 간격 0.5초·
 접촉 시트 8열은 `runtime_defaults.py`를 따른다. schema-v1~v5는
 `ArchivedRenderSettings`로 과거 값을 읽어 스냅샷과 승인 해시를 보존한다.
+
+## 업로드 홍보 설정
+
+`PromotionSettings`는 주소와 언어별 경로 방식을 검증하고 주소를 조합한다.
+프로젝트 설정 로딩은 공용 파일 위에 같은 폴더의 `settings.local.json` 홍보 값만
+적용한다. 설정 UI 저장은 공용 파일의 홍보 값을 기본값으로 두고 개인 값을
+로컬 파일에 분리한다. 새 실행 스냅샷에는 합쳐진 값을 저장한다. 기존 실행은
+개인 설정을 읽지 않으며, 홍보 설정이 없던 실행의 해시는 그대로 유지한다.
+`upload_text.py`는 실행 스냅샷으로부터 언어별 링크를 얻어 영상·쇼츠 설명에
+추가한다. `upload.md`와 완료 웹이 같은 설명을 사용한다.
+
+## 선택적 로컬 업로드 모듈
+
+공개 하네스의 `delivery.py`는 `.local-integrations/delivery.py`를 별도 프로세스로
+호출하는 연결부다. 제공자별 업로드 구현·의존성·설정·인증·재개 기록은 이 Git 제외
+폴더에 둔다. 모듈이 없는 설치에서는 최종 제작을 정상 완료하고 전달을 건너뛴다.
+
+`produce --quality final`은 최종 검사·게시, 쇼츠와 업로드 문구 생성에 모두 성공한
+뒤에만 연결부를 호출한다. 초본·프롬프트 전용 제작에는 호출하지 않는다. 전달 실패는
+이미 검증된 영상을 되돌리지 않으며 명령의 종료 코드와 별도 `delivery-report.json`에
+표시한다. 완료 화면은 로컬 영상과 외부 업로드 결과를 구분한다.
+
+모듈 계약: 현재 Python으로 `--action upload|plan|authorize`, 선택적인 `--run-dir`,
+`--automatic`, `--profile`을 전달한다. 셸을 거치지 않으며 비밀값을 명령행에 넣지 않는다.
+성공은 종료 코드 0, 실패는 0이 아닌 값이다. 실행 폴더의 보고서에는 `status`, `error`,
+`items`(언어·종류·상태·공개 HTTPS URL)를 기록할 수 있다. 토큰·세션 URI는 보고서에
+넣지 않는다. 공개 저장소에는 이 계약·연결부·일반 테스트만 포함한다.
+
+```bash
+python -m video_harness deliver runs/<run> --plan
+python -m video_harness deliver --authorize --profile <profile>
+python -m video_harness deliver runs/<run>
+```
+
+첫 명령은 전달 계획 확인, 두 번째는 개인 모듈 인증, 세 번째는 완성 산출물의 전달
+재시도다. 제공자별 설명은 로컬 모듈의 README를 따른다. 개인 모듈을 Git에 올리지
+않으면 다른 컴퓨터로 복제할 때 별도로 옮겨야 한다.

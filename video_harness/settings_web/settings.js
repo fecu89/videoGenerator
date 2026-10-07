@@ -264,6 +264,7 @@
     document.getElementById("voice-summary").textContent = v.engine === "qwen3" ? `Qwen · ${v.speaker}` : "Kokoro · 번역 언어 전용";
     document.getElementById("pace-summary").textContent = `${currentPaceName()} · 목표 ${v.target_syllables_per_second}음절/초`;
     updatePaceCard();
+    updatePromotionPreview();
     document.getElementById("sound-summary").textContent = state.settings.music.file ? "배경음악 사용" : "배경음악 없음";
     updateErrorDisplay(errors);
   }
@@ -288,6 +289,16 @@
     } else {
       updateStateIndicators();
     }
+  }
+
+  function updatePromotionPreview() {
+    const preview = document.getElementById("promotion-preview");
+    if (!preview) return;
+    const promotion = state.settings.promotion;
+    const base = promotion.base_url.trim().replace(/\/+$/, "");
+    preview.textContent = base ? ["ko", "en", "ja", "zh", "es"].map(lang =>
+      `${lang}: ${base}${promotion.locale_mode === "language_path" && lang !== "ko" ? "/" + lang : ""}`).join(" · ")
+      : "홍보 링크를 넣지 않습니다.";
   }
 
   function buildControl(item) {
@@ -408,6 +419,13 @@
       describedControl.setAttribute("aria-describedby", errorId);
     }
     card.appendChild(control);
+    if (item.key === "promotion.locale_mode") {
+      const preview = createElement("p", "setting-description");
+      preview.id = "promotion-preview";
+      preview.style.overflowWrap = "anywhere";
+      preview.setAttribute("aria-live", "polite");
+      card.appendChild(preview);
+    }
     const error = createElement("p", "field-error");
     error.id = errorId;
     card.appendChild(error);

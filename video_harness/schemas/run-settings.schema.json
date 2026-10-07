@@ -61,6 +61,7 @@
           "default": "burned_videos",
           "enum": [
             "burned_videos",
+            "videos",
             "audio_tracks"
           ],
           "title": "Localized Delivery",
@@ -163,6 +164,27 @@
         }
       },
       "title": "PipelineSettings",
+      "type": "object"
+    },
+    "PromotionSettings": {
+      "additionalProperties": false,
+      "properties": {
+        "base_url": {
+          "default": "",
+          "title": "Base Url",
+          "type": "string"
+        },
+        "locale_mode": {
+          "default": "shared",
+          "enum": [
+            "shared",
+            "language_path"
+          ],
+          "title": "Locale Mode",
+          "type": "string"
+        }
+      },
+      "title": "PromotionSettings",
       "type": "object"
     },
     "QaSettings": {
@@ -494,6 +516,9 @@
     },
     "music": {
       "$ref": "#/$defs/MusicSettings"
+    },
+    "promotion": {
+      "$ref": "#/$defs/PromotionSettings"
     }
   },
   "title": "HarnessSettings",

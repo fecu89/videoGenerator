@@ -27,10 +27,13 @@ def write_project_settings_file(path: Path, **updates: object) -> HarnessSetting
     return settings
 
 
-def test_tracked_project_settings_is_complete_and_round_trips():
+def test_tracked_project_settings_is_complete_and_round_trips(tmp_path):
     source = PROJECT_ROOT / "settings.json"
 
-    settings = load_project_settings(source)
+    # The shared defaults round-trip independently of this machine's private overlay.
+    isolated = tmp_path / 'settings.json'
+    isolated.write_bytes(source.read_bytes())
+    settings = load_project_settings(isolated)
 
     assert json.loads(source.read_text(encoding="utf-8")) == settings.model_dump(
         mode="json"
@@ -223,6 +226,7 @@ def test_settings_hash_uses_canonical_json():
     values['local_video'].pop('localized_delivery', None)
     values['local_video'].pop('camera_transition_seconds', None)
     values.pop('music', None)
+    values.pop('promotion', None)
     values.pop("pacing")
     values["local_video"].pop("target_beat_min_seconds")
     values["local_video"].pop("target_beat_max_seconds")
@@ -465,6 +469,7 @@ def test_text_policy_defaults_to_legacy_and_is_excluded_from_legacy_hash():
     for key in ('pause_mode', 'comma_pause_ms', 'semantic_pause_ms', 'emphasis_pause_ms', 'sentence_pause_ms'):
         values['voice'].pop(key)
     values.pop('music', None)
+    values.pop('promotion', None)
     values.pop("pacing")
     values["local_video"].pop("target_beat_min_seconds")
     values["local_video"].pop("target_beat_max_seconds")
@@ -494,6 +499,7 @@ def test_subtitles_policy_and_languages_are_hash_excluded_when_unset():
     values["local_video"].pop('localized_delivery', None)
     values['local_video'].pop('camera_transition_seconds', None)
     values.pop("music", None)
+    values.pop("promotion", None)
     values.pop("pacing")
     values["local_video"].pop("target_beat_min_seconds")
     values["local_video"].pop("target_beat_max_seconds")

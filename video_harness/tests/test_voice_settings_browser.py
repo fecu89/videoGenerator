@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from video_harness.settings import HarnessSettings, write_project_settings
+from video_harness.settings_catalog import SETTINGS_CATALOG
 from video_harness.pacing_presets import apply_pacing_preset
 from video_harness.tests.test_settings_ui import running_server
 
@@ -39,20 +40,25 @@ const assert = require('node:assert/strict');
   };
   await page.goto(url.href);
   await page.waitForSelector('[data-pacing-preset=shorts]');
-  assert.equal(await page.locator('[data-setting-key]:visible').count(),7);
-  assert.equal(await page.locator('[data-setting-key]').count(),52);
+  assert.equal(await page.locator('[data-setting-key]:visible').count(),9);
+  assert.equal(await page.locator('[data-setting-key]').count(),Number(process.argv[2]));
   assert(await page.locator('#setting-voice-temperature').isHidden());
   assert(await page.locator('#setting-qa-black-frame-threshold').isHidden());
   assert.equal(await page.locator('#setting-render-draft-width, #setting-render-preview-interval-seconds').count(),0);
   assert.equal(await page.inputValue('#output-profile'),'custom');
   assert((await page.textContent('#video-pace-label')).includes('사용자 조정'));
-  assert((await page.textContent('#setting-local-video-localized-delivery option[value=audio_tracks]')).includes('영상에 자막 없음'));
+  assert((await page.textContent('#setting-local-video-localized-delivery option[value=videos]')).includes('자막 없는 언어별 영상'));
   assert.equal(await page.textContent('#setting-local-video-text-policy option[value=subtitles]'),'설명 글자 없음');
-  await page.selectOption('#setting-local-video-localized-delivery','audio_tracks');
+  await page.selectOption('#setting-local-video-localized-delivery','videos');
+  await page.fill('#setting-promotion-base-url','https://example.org');
+  await page.selectOption('#setting-promotion-locale-mode','language_path');
+  assert((await page.textContent('#promotion-preview')).includes('en: https://example.org/en'));
   await page.selectOption('#setting-voice-instructions-file','video_harness/agent/prompts/voice-sohee-ko-documentary.txt');
   await save();
   let settings=await read();
-  assert.equal(settings.local_video.localized_delivery,'audio_tracks');
+  assert.equal(settings.local_video.localized_delivery,'videos');
+  assert.equal(settings.promotion.base_url,'https://example.org');
+  assert.equal(settings.promotion.locale_mode,'language_path');
   assert.equal(settings.voice.temperature,.65);
   assert.equal(settings.local_video.camera_transition_seconds,.4);
   assert.equal(settings.local_video.target_beat_max_seconds,6);
@@ -77,7 +83,7 @@ const assert = require('node:assert/strict');
   await page.goto(url.href);
   await page.waitForSelector('[data-pacing-preset=calm]');
   assert.equal(await page.inputValue('#output-profile'),'portrait');
-  assert.equal(await page.inputValue('#setting-local-video-localized-delivery'),'audio_tracks');
+  assert.equal(await page.inputValue('#setting-local-video-localized-delivery'),'videos');
   assert.equal(await page.getAttribute('[data-pacing-preset=calm]','aria-pressed'),'true');
   await page.fill('#settings-search','영상 규격');
   assert(await page.locator('#output-profile').isVisible());
@@ -96,7 +102,7 @@ const assert = require('node:assert/strict');
   assert.equal(await page.inputValue('#setting-render-final-width'),'1920');
   await save();settings=await read();
   assert.equal(settings.local_video.camera_transition_seconds,.8);
-  assert.equal(settings.local_video.localized_delivery,'audio_tracks');
+  assert.equal(settings.local_video.localized_delivery,'videos');
   await page.goto(url.href);
   await page.waitForSelector('[data-pacing-preset=calm]');
   assert(await page.locator('#setting-local-video-camera-transition-seconds').isHidden());
@@ -118,7 +124,7 @@ const assert = require('node:assert/strict');
  process.exitCode=missing?77:1;
 });
 '''
-    done = subprocess.run(['node', '-e', script, f'http://{host}:{port}/?token={running_server.session_token}'], cwd=renderer, capture_output=True, text=True, timeout=60)
+    done = subprocess.run(['node', '-e', script, f'http://{host}:{port}/?token={running_server.session_token}', str(len(SETTINGS_CATALOG))], cwd=renderer, capture_output=True, text=True, timeout=60)
     if done.returncode == 77:
         pytest.skip('Install Playwright Chromium to run the browser test')
     assert done.returncode == 0, done.stdout + done.stderr

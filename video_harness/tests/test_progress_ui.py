@@ -50,3 +50,71 @@ def test_old_output_is_not_current_success(tmp_path):
     (tmp_path / 'final.mp4').write_bytes(b'old')
     monitor = ProgressMonitor(tmp_path, tmp_path / 'staging', 123, 10, 'final', alive=lambda: False)
     assert monitor.status()['state'] == 'stopped'
+
+
+def test_delivery_failure_is_separate_from_local_video_completion(tmp_path):
+    write_json(tmp_path / 'script.json', {})
+    write_json(tmp_path / 'delivery-report.json', {'status': 'complete', 'items': []})
+    monitor = ProgressMonitor(tmp_path, tmp_path / 'staging', 123, 10, 'final', alive=lambda: False)
+    assert monitor.status()['delivery'] == {}
+    write_json(tmp_path / 'pipeline-report.json', {'status': 'complete', 'quality': 'final',
+        'script_sha256': hashlib.sha256((tmp_path / 'script.json').read_bytes()).hexdigest()})
+    write_json(tmp_path / 'qa-report.json', {'status': 'passed'})
+    (tmp_path / 'final.mp4').write_bytes(b'video')
+    write_json(tmp_path / 'delivery-report.json', {'status': 'failed', 'error': 'delivery unavailable', 'items': []})
+    status = monitor.status()
+    assert status['state'] == 'complete'
+    assert status['delivery']['status'] == 'failed'
+
+
+def test_progress_requires_every_language_video_and_lists_downloads(tmp_path):
+    write_json(tmp_path / 'script.json', {})
+    write_json(tmp_path / 'run-settings.json', {'schema_version': 6, 'local_video': {
+        'text_policy': 'subtitles', 'subtitle_languages': 'en,ja,zh,es', 'localized_delivery': 'videos'}})
+    monitor = ProgressMonitor(tmp_path, tmp_path / 'staging', 123, 10, 'final', alive=lambda: False)
+    write_json(tmp_path / 'pipeline-report.json', {'status': 'complete', 'quality': 'final',
+        'script_sha256': hashlib.sha256((tmp_path / 'script.json').read_bytes()).hexdigest()})
+    write_json(tmp_path / 'qa-report.json', {'status': 'passed'})
+    (tmp_path / 'final.mp4').write_bytes(b'video')
+    for lang in ('ko', 'en', 'ja', 'zh'):
+        (tmp_path / f'final-{lang}.mp4').write_bytes(b'video')
+    assert monitor.status()['state'] == 'stopped'
+    assert monitor.status()['videos'] == []
+    (tmp_path / 'final-es.mp4').write_bytes(b'video')
+    status = monitor.status()
+    assert status['state'] == 'complete'
+    assert status['videos'] == [{'lang': lang, 'file': f'final-{lang}.mp4', 'url': f'/videos/{lang}.mp4'}
+                                for lang in ('ko', 'en', 'ja', 'zh', 'es')]
+
+
+def test_language_video_endpoint_serves_selected_video_only_after_completion(tmp_path):
+    from http.server import ThreadingHTTPServer
+    from threading import Thread
+    from types import SimpleNamespace
+    from urllib.error import HTTPError
+    from urllib.request import Request, urlopen
+    import pytest
+    from video_harness.progress_ui import handler_for
+
+    video = tmp_path / 'final-en.mp4'
+    video.write_bytes(b'english-video')
+    state = {'state': 'complete'}
+    monitor = SimpleNamespace(language_videos={'en': video}, status=lambda: state, quality='final')
+    server = ThreadingHTTPServer(('127.0.0.1', 0), handler_for(monitor))
+    thread = Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base = f'http://127.0.0.1:{server.server_port}'
+    try:
+        with urlopen(Request(base + '/videos/en.mp4', headers={'Range': 'bytes=0-6'})) as response:
+            assert response.status == 206 and response.read() == b'english'
+        with pytest.raises(HTTPError) as missing:
+            urlopen(base + '/videos/ja.mp4')
+        assert missing.value.code == 404
+        state['state'] = 'finishing'
+        with pytest.raises(HTTPError) as unfinished:
+            urlopen(base + '/videos/en.mp4')
+        assert unfinished.value.code == 404
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join()

@@ -1,4 +1,4 @@
-"""Language layers on one video master: per-language audio timeline + burned-in subtitles, equal length by construction."""
+"""Narrated videos from one visual master, with optional burned subtitles and historical audio-only delivery."""
 from __future__ import annotations
 import json
 import subprocess
@@ -29,7 +29,7 @@ def delivery_mode(settings: ResolvedHarnessSettings) -> str:
 
 
 def final_name(lang: str, quality: str, delivery: str = "burned_videos") -> str:
-    """burned_videos: one subtitle-burned video per language. audio_tracks: timeline-length audio per language."""
+    """Each language is an MP4, except historical audio_tracks delivery."""
     suffix = ".m4a" if delivery == "audio_tracks" else ".mp4"
     return f"final-{lang}{suffix}" if quality == "final" else f"final-draft-{lang}{suffix}"
 
@@ -149,6 +149,9 @@ def localize_outputs(
                 source = scored
             if delivery == "audio_tracks":
                 _extract_audio(runner, source, destination)
+            elif delivery == "videos":
+                # Muxing already produced the complete film, including this language's music mix.
+                source.replace(destination)
             else:
                 _burn(runner, source, ass, destination, encoder)
         finally:

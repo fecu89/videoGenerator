@@ -147,7 +147,7 @@ Blender 从 [blender.org](https://www.blender.org/download/) 下载,放进"应�
 | 文件 | 内容 |
 |---|---|
 | `final.mp4` | 成品视频(韩语语音、背景音乐) |
-| `final-en.m4a` 等 | 各语言的音轨。根据设置,也可能输出为各语言的视频 `final-en.mp4` |
+| `final-<lang>.mp4` | 包含韩语、英语、日语、中文、西班牙语配音和音乐的完整视频。字幕可选，单独音轨仅用于旧任务 |
 | `subtitles/` | 各语言的字幕文件(`.srt`、`.ass`) |
 | `video-only.mp4` | 没有声音的视频 |
 | `final-draft.mp4` | 阶段 5 中确认过的初稿 |

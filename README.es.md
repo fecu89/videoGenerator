@@ -147,7 +147,7 @@ Cada vídeo tiene su propia carpeta `runs/<fecha>-<tema>/`.
 | Archivo | Contenido |
 |---|---|
 | `final.mp4` | Vídeo terminado (voz en coreano, música de fondo) |
-| `final-en.m4a`, etc. | Pistas de voz por idioma. Según los ajustes, pueden salir como vídeos por idioma, por ejemplo `final-en.mp4` |
+| `final-<lang>.mp4` | Vídeos completos con narración y música en coreano, inglés, japonés, chino y español; subtítulos opcionales. Las pistas de audio separadas se conservan para ejecuciones anteriores |
 | `subtitles/` | Archivos de subtítulos por idioma (`.srt`, `.ass`) |
 | `video-only.mp4` | Vídeo sin sonido |
 | `final-draft.mp4` | El borrador que comprobaste en la etapa 5 |

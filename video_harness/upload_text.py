@@ -160,12 +160,16 @@ def upload_sheet(run_dir: Path) -> dict:
     for lang in languages:
         title, description = _texts(script, translations, lang, overrides)
         block = credits_block(lang, credits, music)
+        promotion = getattr(settings, "promotion", None)
+        url = promotion.url_for(lang) if promotion else ""
+        website_label = {"ko": "웹사이트", "en": "Website", "ja": "ウェブサイト", "zh": "网站", "es": "Sitio web"}.get(lang, "Website")
+        promotion_block = f"{website_label}: {url}" if url else ""
         entry = {"lang": lang, "name": LABELS.get(lang, (lang,))[0], "title": title,
-                 "description": "\n\n".join(part for part in (description, block) if part),
+                 "description": "\n\n".join(part for part in (description, promotion_block, block) if part),
                  "shorts_title": None, "shorts_description": None}
         if (run / SHORTS_DIR / shorts_name(lang, "final")).is_file():
             entry["shorts_title"] = short_titles.get(lang) or title
-            entry["shorts_description"] = "\n\n".join(part for part in (description, "#Shorts", block) if part)
+            entry["shorts_description"] = "\n\n".join(part for part in (description, "#Shorts", promotion_block, block) if part)
         entries.append(entry)
     return {"title": script.selected_topic.title, "warnings": credit_warnings(credits), "languages": entries}
 

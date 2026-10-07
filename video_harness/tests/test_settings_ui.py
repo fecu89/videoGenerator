@@ -99,7 +99,7 @@ def test_get_settings_returns_document_catalog_sections_and_revision(
     assert payload["settings"] == HarnessSettings().model_dump(mode="json")
     assert payload["recommended_settings"] == apply_pacing_preset(HarnessSettings(), "shorts").model_dump(mode="json")
     assert payload["revision"] == settings_sha256(HarnessSettings())
-    assert len(payload["catalog"]) == 57
+    assert len(payload["catalog"]) == 59
     assert [section["id"] for section in payload["sections"]] == ["pace", "basic", "sound", "output", "advanced"]
     assert [profile["id"] for profile in payload["output_profiles"]] == ["landscape", "portrait", "square"]
     assert headers["Cache-Control"] == "no-store"
