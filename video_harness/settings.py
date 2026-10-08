@@ -5,6 +5,7 @@ import json
 from collections.abc import Mapping
 from pathlib import Path
 from typing import ClassVar, Literal
+from urllib.parse import urlsplit, urlunsplit
 
 from pydantic import ConfigDict, Field, HttpUrl, TypeAdapter, field_validator, model_validator
 
@@ -240,7 +241,8 @@ class PromotionSettings(StrictModel):
     def url_for(self, lang: str) -> str:
         if not self.base_url or self.locale_mode == "shared" or lang == "ko":
             return self.base_url
-        return f"{self.base_url}/{lang}"
+        url = urlsplit(self.base_url)
+        return urlunsplit((url.scheme, url.netloc, f"/{lang}{url.path}", "", ""))
 
 
 class HarnessSettings(ArchivedV5HarnessSettings):

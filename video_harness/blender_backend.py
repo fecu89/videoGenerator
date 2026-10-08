@@ -18,6 +18,8 @@ from .storage import atomic_write
 
 
 def renderer_modules(scene_graph: str) -> tuple[str, str]:
+    if scene_graph == 'energy-transport-blender-v1':
+        return 'energy_transport', 'EnergyTransportGallery'
     if scene_graph == 'typhoon-beta-blender-v1':
         return 'typhoon_beta', 'TyphoonBetaGallery'
     if scene_graph == 'saturn-rings-blender-v1':
@@ -53,7 +55,9 @@ def renderer_modules(scene_graph: str) -> tuple[str, str]:
 
 def validate_blender_job(job: dict) -> None:
     renderer_modules(job.get('scene_graph'))
-    if job['scene_graph'] == 'typhoon-beta-blender-v1':
+    if job['scene_graph'] == 'energy-transport-blender-v1':
+        from .blender_renderer.energy_transport_math import validate_job
+    elif job['scene_graph'] == 'typhoon-beta-blender-v1':
         from .blender_renderer.typhoon_beta_math import validate_job
     elif job['scene_graph'] == 'saturn-rings-blender-v1':
         from .blender_renderer.saturn_rings_math import validate_job

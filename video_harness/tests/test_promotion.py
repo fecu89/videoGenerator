@@ -61,7 +61,7 @@ def test_upload_descriptions_include_each_language_link_before_credits(tmp_path,
     markdown = write_upload_text(tmp_path).read_text()
     for entry in sheet['languages']:
         suffix = '/' + entry['lang'] if mode == 'language_path' and entry['lang'] != 'ko' else ''
-        url = 'https://example.org/site' + suffix
+        url = 'https://example.org' + suffix + '/site'
         for field in ('description', 'shorts_description'):
             assert url in entry[field]
             assert entry[field].count('https://example.org') == 1

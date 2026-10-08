@@ -296,8 +296,16 @@
     if (!preview) return;
     const promotion = state.settings.promotion;
     const base = promotion.base_url.trim().replace(/\/+$/, "");
-    preview.textContent = base ? ["ko", "en", "ja", "zh", "es"].map(lang =>
-      `${lang}: ${base}${promotion.locale_mode === "language_path" && lang !== "ko" ? "/" + lang : ""}`).join(" · ")
+    preview.textContent = base ? ["ko", "en", "ja", "zh", "es"].map(lang => {
+      let localized = base;
+      if (promotion.locale_mode === "language_path" && lang !== "ko") {
+        try {
+          const url = new URL(base);
+          localized = `${url.origin}/${lang}${url.pathname.replace(/\/+$/, "")}`;
+        } catch { /* Validation reports incomplete URLs when saving. */ }
+      }
+      return `${lang}: ${localized}`;
+    }).join(" · ")
       : "홍보 링크를 넣지 않습니다.";
   }
 

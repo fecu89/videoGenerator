@@ -151,7 +151,7 @@ SETTINGS_CATALOG = (
             _option("videos", "자막 없는 언어별 영상"), _option("burned_videos", "자막이 있는 언어별 영상"),
             _option("audio_tracks", "기존 방식 · 영상에 자막 없음 · 음성/자막 파일 따로")),
     _text("promotion.base_url", "output", "홍보 웹사이트 주소", "유튜브 본편·쇼츠 설명에 넣을 주소입니다. 비우면 홍보 링크를 넣지 않습니다."),
-    _select("promotion.locale_mode", "output", "홍보 주소 언어별 경로", "언어별 경로를 선택하면 한국어는 기본 주소, 다른 언어는 /en, /ja, /zh, /es를 붙입니다.",
+    _select("promotion.locale_mode", "output", "홍보 주소 언어별 경로", "한국어는 입력 주소를 쓰고, 다른 언어는 도메인 바로 뒤에 /en, /ja, /zh, /es를 넣습니다. 글 주소도 /en/post/… 형태로 연결됩니다.",
             _option("shared", "모든 언어에서 같은 주소"), _option("language_path", "언어 코드를 경로에 추가")),
     _select("pipeline.output_mode", "output", "생성 범위", "특정 산출물만 필요할 때 변경합니다.",
             _option("all", "전체 생성"), _option("video_only", "영상만"), _option("prompts_only", "프롬프트만"), advanced=True),

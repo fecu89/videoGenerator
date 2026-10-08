@@ -471,7 +471,8 @@ schema-v1 샷 기반 실행은 기존 `render-production`과 `review-shot` 명�
 새 실행의 `promotion.base_url`과 `promotion.locale_mode`는 설정 창에서 정하고
 `run-settings.json`에 고정한다. 기본 주소가 비어 있으면 홍보를 넣지 않는다.
 `shared`는 모든 언어에 같은 주소, `language_path`는 한국어에 기본 주소와
-나머지 언어에 `/en`, `/ja`, `/zh`, `/es` 경로를 사용한다. `upload-text`가
+나머지 언어는 도메인 바로 뒤에 `/en`, `/ja`, `/zh`, `/es`를 넣는다.
+글 주소도 `/post/article`에서 `/en/post/article` 형태로 연결한다. `upload-text`가
 본편·쇼츠 설명에 해당 주소를 넣고 모델·음악 출처는 마지막에 유지한다.
 대본·번역·음성을 홍보 링크 때문에 고치지 않는다. 공용 설정의 기본 주소는
 빈칸이며 개인 홍보 값은 Git 제외 파일 `settings.local.json`에 저장한다.
