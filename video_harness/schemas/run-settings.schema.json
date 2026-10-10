@@ -62,7 +62,8 @@
           "enum": [
             "burned_videos",
             "videos",
-            "audio_tracks"
+            "audio_tracks",
+            "video_and_audio"
           ],
           "title": "Localized Delivery",
           "type": "string"

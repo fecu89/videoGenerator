@@ -110,7 +110,7 @@ def test_cues_rewrap_for_portrait_and_ass_retimes_for_speed(tmp_path):
 
 
 @pytest.mark.skipif(shutil.which('ffmpeg') is None, reason='ffmpeg required')
-@pytest.mark.parametrize('delivery', ['audio_tracks', 'videos'])
+@pytest.mark.parametrize('delivery', ['audio_tracks', 'videos', 'video_and_audio'])
 def test_build_shorts_makes_one_portrait_video_per_language_and_upload_sheet_lists_them(tmp_path, delivery):
     script, translations = titled_run(tmp_path, languages='en')
     translations.title, translations.shorts_title, translations.description = {'en': 'Why Typhoons Turn'}, {'en': 'Why Northwest'}, {'en': 'Trade winds and the beta effect.'}
@@ -121,7 +121,7 @@ def test_build_shorts_makes_one_portrait_video_per_language_and_upload_sheet_lis
     subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', '-f', 'lavfi', '-i', 'testsrc=size=320x180:rate=30:duration=2.3',
                     '-f', 'lavfi', '-i', 'sine=frequency=440:duration=2.3', '-shortest', '-pix_fmt', 'yuv420p', str(tmp_path / 'final.mp4')], check=True)
     for lang in ('ko', 'en'):
-        if delivery == 'audio_tracks':
+        if delivery == 'audio_tracks' or (delivery == 'video_and_audio' and lang != 'ko'):
             subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', '-i', str(tmp_path / 'final.mp4'), '-vn', '-c:a', 'copy', str(tmp_path / f'final-{lang}.m4a')], check=True)
         else:
             shutil.copyfile(tmp_path / 'final.mp4', tmp_path / f'final-{lang}.mp4')

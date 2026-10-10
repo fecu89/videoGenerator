@@ -1,5 +1,6 @@
 import hashlib
 import json
+import pytest
 
 from video_harness.progress_ui import ProgressMonitor
 from video_harness.progress_ui import describe_postprocess
@@ -67,27 +68,32 @@ def test_delivery_failure_is_separate_from_local_video_completion(tmp_path):
     assert status['delivery']['status'] == 'failed'
 
 
-def test_progress_requires_every_language_video_and_lists_downloads(tmp_path):
+@pytest.mark.parametrize('delivery', ['videos', 'video_and_audio'])
+def test_progress_requires_every_language_output_and_lists_downloads(tmp_path, delivery):
     write_json(tmp_path / 'script.json', {})
     write_json(tmp_path / 'run-settings.json', {'schema_version': 6, 'local_video': {
-        'text_policy': 'subtitles', 'subtitle_languages': 'en,ja,zh,es', 'localized_delivery': 'videos'}})
+        'text_policy': 'subtitles', 'subtitle_languages': 'en,ja,zh,es', 'localized_delivery': delivery}})
     monitor = ProgressMonitor(tmp_path, tmp_path / 'staging', 123, 10, 'final', alive=lambda: False)
     write_json(tmp_path / 'pipeline-report.json', {'status': 'complete', 'quality': 'final',
         'script_sha256': hashlib.sha256((tmp_path / 'script.json').read_bytes()).hexdigest()})
     write_json(tmp_path / 'qa-report.json', {'status': 'passed'})
     (tmp_path / 'final.mp4').write_bytes(b'video')
     for lang in ('ko', 'en', 'ja', 'zh'):
-        (tmp_path / f'final-{lang}.mp4').write_bytes(b'video')
+        suffix = '.m4a' if delivery == 'video_and_audio' and lang != 'ko' else '.mp4'
+        (tmp_path / f'final-{lang}{suffix}').write_bytes(b'media')
     assert monitor.status()['state'] == 'stopped'
     assert monitor.status()['videos'] == []
-    (tmp_path / 'final-es.mp4').write_bytes(b'video')
+    (tmp_path / ('final-es.m4a' if delivery == 'video_and_audio' else 'final-es.mp4')).write_bytes(b'media')
     status = monitor.status()
     assert status['state'] == 'complete'
     assert status['videos'] == [{'lang': lang, 'file': f'final-{lang}.mp4', 'url': f'/videos/{lang}.mp4'}
-                                for lang in ('ko', 'en', 'ja', 'zh', 'es')]
+                                for lang in (('ko',) if delivery == 'video_and_audio' else ('ko', 'en', 'ja', 'zh', 'es'))]
+    assert status['audio_tracks'] == ([{'lang': lang, 'file': f'final-{lang}.m4a', 'url': f'/audio/{lang}.m4a'}
+                                       for lang in ('en', 'ja', 'zh', 'es')] if delivery == 'video_and_audio' else [])
 
 
-def test_language_video_endpoint_serves_selected_video_only_after_completion(tmp_path):
+@pytest.mark.parametrize('audio', [False, True])
+def test_language_media_endpoint_serves_selected_output_only_after_completion(tmp_path, audio):
     from http.server import ThreadingHTTPServer
     from threading import Thread
     from types import SimpleNamespace
@@ -96,23 +102,27 @@ def test_language_video_endpoint_serves_selected_video_only_after_completion(tmp
     import pytest
     from video_harness.progress_ui import handler_for
 
-    video = tmp_path / 'final-en.mp4'
+    suffix = 'm4a' if audio else 'mp4'
+    endpoint = 'audio' if audio else 'videos'
+    video = tmp_path / f'final-en.{suffix}'
     video.write_bytes(b'english-video')
     state = {'state': 'complete'}
-    monitor = SimpleNamespace(language_videos={'en': video}, status=lambda: state, quality='final')
+    monitor = SimpleNamespace(language_videos={} if audio else {'en': video},
+                              language_audio={'en': video} if audio else {}, status=lambda: state, quality='final')
     server = ThreadingHTTPServer(('127.0.0.1', 0), handler_for(monitor))
     thread = Thread(target=server.serve_forever, daemon=True)
     thread.start()
     base = f'http://127.0.0.1:{server.server_port}'
     try:
-        with urlopen(Request(base + '/videos/en.mp4', headers={'Range': 'bytes=0-6'})) as response:
+        with urlopen(Request(base + f'/{endpoint}/en.{suffix}', headers={'Range': 'bytes=0-6'})) as response:
             assert response.status == 206 and response.read() == b'english'
+            assert response.headers['Content-Type'] == ('audio/mp4' if audio else 'video/mp4')
         with pytest.raises(HTTPError) as missing:
-            urlopen(base + '/videos/ja.mp4')
+            urlopen(base + f'/{endpoint}/ja.{suffix}')
         assert missing.value.code == 404
         state['state'] = 'finishing'
         with pytest.raises(HTTPError) as unfinished:
-            urlopen(base + '/videos/en.mp4')
+            urlopen(base + f'/{endpoint}/en.{suffix}')
         assert unfinished.value.code == 404
     finally:
         server.shutdown()

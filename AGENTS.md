@@ -35,11 +35,13 @@ python -m video_harness produce runs/<run>
 장면 길이에 맞춰 속도 보정(`voice.max_tempo_factor` 상한)되며 넘치면 그 장면 번역을 줄인다.
 번역과 다른 언어 음성에는 사용자 승인·청취 검토가 없고 게이트만 통과하면 된다.
 완성 단계의 다국어 산출물은 설정 `local_video.localized_delivery`로 정한다.
-현재 프로젝트 기본값 `videos`는 한국어·영어·일본어·중국어·스페인어 음성과
-배경음악이 각각 포함된 자막 없는 `final-ko.mp4`, `final-en.mp4`, `final-ja.mp4`,
-`final-zh.mp4`, `final-es.mp4`를 같은 길이로 만든다. 별도 M4A는 만들지 않는다.
-`burned_videos`는 같은 언어별 영상에 자막을 번인한다. `final.mp4`는 한국어
-검증·쇼츠 제작용 기준 영상으로 유지하고, 전달은 언어별 MP4를 기준으로 한다.
+현재 프로젝트 기본값 `video_and_audio`는 자막 없는 한국어 본편
+`final-ko.mp4`와 추가 언어의 `final-en.m4a`, `final-ja.m4a`, `final-zh.m4a`,
+`final-es.m4a`를 만든다. 음성 파일에는 각 언어 나레이션과 배경음악을 담고
+한국어 본편과 길이를 맞춘다. 추가 언어의 본편 MP4는 만들지 않는다.
+쇼츠는 한국어 기준 화면과 각 언어 음성을 결합해 5개 언어 MP4를 유지한다.
+`videos`는 자막 없는 언어별 본편 MP4, `burned_videos`는 자막을 번인한 언어별
+MP4를 만든다. `final.mp4`는 한국어 검증·쇼츠 제작용 기준 영상으로 유지한다.
 `subtitles/<lang>.srt|.ass`는 CC 업로드·쇼츠 제작용으로 보관한다.
 과거 실행의 `audio_tracks`는 기존 영상 하나와 언어별 M4A 출력 방식을 유지한다.
 사용자는 실행을 시작할 때 설정 화면에서 이 값을 고른다.
@@ -187,7 +189,8 @@ FFmpeg 호출은 필요한 하네스 코드다. 렌더러 선택은 계획에 �
 변경되거나 합성된 콘텐츠를 예로 표시한다. 업로드 후 공개 범위·언어·합성 콘텐츠
 설정을 다시 조회해 검증하고, 불일치 시 완료로 처리하거나 중복 업로드하지 않는다.
 추가 음성 트랙은 공개 Data API 업로드를 지원하지 않으므로 로컬 모듈이
-완성 영상에서 배경음악 포함 음성을 `studio-audio/<lang>.m4a`로 준비한다.
+완성 M4A(기존 실행은 언어별 MP4)에서 배경음악 포함 음성을
+`studio-audio/<lang>.m4a`로 준비한다.
 `studio-audio-job.json`에 대상 영상·채널·파일 해시를 기록하고, 활성 에이전트가
 로그인된 Studio 브라우저에서 음성 게시를 이어간다. CLI가 브라우저를 자동으로
 조작했다고 가정하지 않는다. API 업로드 후 `awaiting_studio_audio`는 전달 완료가

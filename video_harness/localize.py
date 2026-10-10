@@ -1,4 +1,4 @@
-"""Narrated videos from one visual master, with optional burned subtitles and historical audio-only delivery."""
+"""Localized video or mixed audio from one visual master."""
 from __future__ import annotations
 import json
 import subprocess
@@ -28,9 +28,13 @@ def delivery_mode(settings: ResolvedHarnessSettings) -> str:
     return getattr(getattr(settings, "local_video", None), "localized_delivery", "burned_videos") or "burned_videos"
 
 
+def audio_only(lang: str, delivery: str) -> bool:
+    return delivery == "audio_tracks" or (delivery == "video_and_audio" and lang != MASTER)
+
+
 def final_name(lang: str, quality: str, delivery: str = "burned_videos") -> str:
-    """Each language is an MP4, except historical audio_tracks delivery."""
-    suffix = ".m4a" if delivery == "audio_tracks" else ".mp4"
+    """Name the actual deliverable, including the Korean-video/translated-audio mode."""
+    suffix = ".m4a" if audio_only(lang, delivery) else ".mp4"
     return f"final-{lang}{suffix}" if quality == "final" else f"final-draft-{lang}{suffix}"
 
 
@@ -147,9 +151,9 @@ def localize_outputs(
                 add_music(runner, source=muxed, music_path=music_path, destination=scored, duration=spec.duration_seconds,
                           cues=speech_spans(run, lang, output_fps=output_fps), settings=settings)
                 source = scored
-            if delivery == "audio_tracks":
+            if audio_only(lang, delivery):
                 _extract_audio(runner, source, destination)
-            elif delivery == "videos":
+            elif delivery in ("videos", "video_and_audio"):
                 # Muxing already produced the complete film, including this language's music mix.
                 source.replace(destination)
             else:
@@ -167,6 +171,8 @@ def probe_audio_track(path: Path) -> tuple[float, str | None]:
     result = subprocess.run(["ffprobe", "-v", "error", "-show_streams", "-show_format", "-of", "json", str(path)],
                             text=True, capture_output=True, check=True)
     payload = json.loads(result.stdout)
+    if any(stream.get("codec_type") == "video" for stream in payload.get("streams", [])):
+        raise ValueError(f"오디오 전용 파일에 영상 스트림이 있습니다: {path}")
     audio = next((stream for stream in payload.get("streams", []) if stream.get("codec_type") == "audio"), None)
     raw = payload.get("format", {}).get("duration") or (audio or {}).get("duration")
     if raw in (None, "N/A"):
@@ -187,7 +193,7 @@ def localization_issues(run: Path, root: Path, quality: str, languages: Sequence
         if not path.is_file():
             errors.append(f"localized_missing: {lang} {path.name}")
             continue
-        if delivery == "audio_tracks":
+        if audio_only(lang, delivery):
             # Audio tracks: only the timeline length must match (AAC priming may add a few ms).
             duration, codec = probe_audio_track(path)
             if abs(duration - master.duration_seconds) > max(tolerance, 0.1):

@@ -18,7 +18,7 @@ VariantMode = Literal["four", "balanced_only"]
 VoiceGenerationPreset = Literal["consistent", "custom"]
 VoiceEmotionMode = Literal["script_only", "off"]
 TextPolicy = Literal["legacy", "keywords", "subtitles"]
-LocalizedDelivery = Literal["burned_videos", "videos", "audio_tracks"]
+LocalizedDelivery = Literal["burned_videos", "videos", "audio_tracks", "video_and_audio"]
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 PROJECT_SETTINGS_FILE = PROJECT_ROOT / "settings.json"
@@ -150,7 +150,7 @@ class LocalVideoSettings(StrictModel):
     target_beat_max_seconds: float = Field(default=0, ge=0, le=30)
     text_policy: TextPolicy = "legacy"
     subtitle_languages: str = ""
-    # videos: narrated MP4 per language without burned subtitles; audio_tracks is historical delivery.
+    # video_and_audio: Korean MP4 + translated M4A; retain older delivery modes for run compatibility.
     localized_delivery: LocalizedDelivery = "burned_videos"
 
 

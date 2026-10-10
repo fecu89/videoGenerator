@@ -50,7 +50,7 @@
     "target_beat_max_seconds": 6.0,
     "text_policy": "subtitles",
     "subtitle_languages": "en,ja,zh,es",
-    "localized_delivery": "videos"
+    "localized_delivery": "video_and_audio"
   },
   "render": {
     "final_width": 1920,
@@ -67,7 +67,7 @@
     "duration_tolerance_seconds": 0.05
   },
   "music": {
-    "file": "Reviver - The Grey Room _ Density & Time.mp3",
+    "file": "Defying Gravity - Density & Time.mp3",
     "gain_db": -6.5,
     "duck_db": -11.0,
     "fade_seconds": 1.0,

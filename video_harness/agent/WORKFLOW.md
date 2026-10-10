@@ -248,15 +248,17 @@ python -m video_harness voice runs/<run>/script.json --target-language all
 언어 음성은 존재·길이·무음·클리핑만 자동 검사하며 청취 검토는 한국어만 한다.
 
 초본·최종 제작의 다국어 산출물은 `local_video.localized_delivery`에 따른다.
-현재 프로젝트 기본값 `videos`는 공통 `video-only` 영상에 언어별 음성·배경음악을
-합쳐 자막 없는 `final-draft-<lang>.mp4`, `final-<lang>.mp4`를 만든다.
-한국어와 추가 언어 en,ja,zh,es를 선택하면 각 언어 MP4 5개를 전달하며 별도 M4A는
-만들지 않는다. `burned_videos`는 같은 언어별 영상에 해당 언어 자막을 번인한다.
+현재 프로젝트 기본값 `video_and_audio`는 한국어 MP4와 추가 언어 M4A를 만든다.
+최종 전달은 `final-ko.mp4`와 `final-en.m4a`, `final-ja.m4a`, `final-zh.m4a`,
+`final-es.m4a`이며 초본에는 `final-draft-` 접두사를 쓴다. 모든 언어에
+나레이션·배경음악을 합치고 길이를 맞춘다. 추가 언어의 본편 MP4는 남기지 않는다.
+쇼츠는 한국어 기준 화면과 각 언어 음성으로 모든 언어의 세로 영상을 만든다.
+`videos`는 자막 없는 언어별 MP4, `burned_videos`는 자막 있는 언어별 MP4다.
 `audio_tracks`는 과거 실행용 영상 하나와 별도 M4A 출력 호환 경로다.
 `final.mp4`는 한국어 기준 영상으로 유지한다. `subtitles/<lang>.ass|.srt`는
 CC 업로드·쇼츠 제작에 사용하며 쇼츠에는 언어별 자막을 번인한다.
 `subtitle-gate-<lang>.json`, `localization-<quality>-gate.json`으로 자막 형식과
-모든 언어 영상의 화면 크기·프레임 수·길이·음성 존재를 검사한다.
+영상의 화면 크기·프레임 수·길이·음성 존재와 음성 파일의 길이·오디오 전용 여부를 검사한다.
 
 ## 7. schema-v2 시퀀스 영상 제작 계획
 
