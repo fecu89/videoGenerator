@@ -77,3 +77,56 @@ def test_older_runs_do_not_inherit_personal_promotion(tmp_path):
     titled_run(tmp_path, languages='en')
     assert all('웹사이트:' not in entry['description'] and 'Website:' not in entry['description']
                for entry in upload_sheet(tmp_path)['languages'])
+
+
+def test_korean_only_promotion_does_not_add_foreign_links(tmp_path):
+    settings = PromotionSettings(base_url='https://example.org/post/article', locale_mode='ko_only')
+    assert settings.url_for('ko') == 'https://example.org/post/article'
+    assert all(settings.url_for(lang) == '' for lang in ('en', 'ja', 'zh', 'es'))
+
+
+def test_run_promotion_override_changes_uploads_without_changing_approved_inputs(tmp_path):
+    titled_run(tmp_path, languages='en,ja,zh,es')
+    (tmp_path / 'shorts').mkdir()
+    for lang in ('ko', 'en', 'ja', 'zh', 'es'):
+        (tmp_path / 'shorts' / f'shorts-{lang}.mp4').write_bytes(b'short')
+    before = {name: (tmp_path / name).read_bytes() for name in ('script.json', 'translations.json', 'run-settings.json')}
+    (tmp_path / 'upload-overrides.json').write_text(json.dumps({
+        'promotion': {'base_url': 'https://example.org/post/article', 'locale_mode': 'ko_only'},
+        'description': {'en': 'English explanation.'},
+    }))
+    for entry in upload_sheet(tmp_path)['languages']:
+        for field in ('description', 'shorts_description'):
+            assert ('https://example.org/post/article' in entry[field]) == (entry['lang'] == 'ko')
+        if entry['lang'] == 'en':
+            assert entry['description'].startswith('English explanation.')
+    assert before == {name: (tmp_path / name).read_bytes() for name in before}
+
+
+def test_korean_only_mode_removes_web_addresses_from_foreign_copy_and_keeps_credit_names(tmp_path):
+    from video_harness.tests.test_shorts import write_glb
+    titled_run(tmp_path, languages='en,ja,zh,es')
+    write_glb(tmp_path / 'assets' / 'earth.glb', {
+        'author': 'Akshat (https://sketchfab.com/author)', 'title': 'Earth',
+        'license': 'CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)',
+        'source': 'https://sketchfab.com/3d-models/earth',
+    })
+    (tmp_path / 'shorts').mkdir()
+    languages = ('ko', 'en', 'ja', 'zh', 'es')
+    for lang in languages:
+        (tmp_path / 'shorts' / f'shorts-{lang}.mp4').write_bytes(b'short')
+    copy = 'Learn science. [Article](https://example.org/post) www.example.net example.com/path'
+    (tmp_path / 'upload-overrides.json').write_text(json.dumps({
+        'promotion': {'base_url': 'https://example.org', 'locale_mode': 'ko_only'},
+        'description': {lang: copy for lang in languages},
+    }))
+    sheet = upload_sheet(tmp_path)
+    for entry in sheet['languages']:
+        for field in ('description', 'shorts_description'):
+            text = entry[field]
+            assert 'Earth' in text and 'Akshat' in text and 'CC BY 4.0' in text
+            if entry['lang'] == 'ko':
+                assert 'https://sketchfab.com/' in text and 'http://creativecommons.org/' in text
+            else:
+                assert 'Learn science.' in text and 'Article' in text
+                assert not any(marker in text for marker in ('http', 'www.', 'example.', 'sketchfab.', 'creativecommons.'))

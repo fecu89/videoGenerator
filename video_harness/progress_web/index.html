@@ -29,11 +29,12 @@ async function update() {
     const messages = {rendering:'장면을 렌더링하고 있습니다', finishing:'렌더 완료 · 후처리가 진행 중입니다', complete:'제작과 자동 검사가 완료되었습니다', stopped:'작업이 종료되었지만 완성본을 확인하지 못했습니다'};
     el('status').textContent = messages[d.state];
     if (complete) {
-      terminal = true;
+      terminal = d.delivery?.status !== 'awaiting_studio_audio';
       el('title').textContent = '영상이 완성되었습니다';
       el('hint').textContent = '아래에서 영상을 재생하거나 저장할 수 있습니다.';
       el('result').hidden = false;
-      if (!videoLoaded) { loadVideos(d); showDelivery(d.delivery); videoLoaded = true; loadUpload(); }
+      showDelivery(d.delivery);
+      if (!videoLoaded) { loadVideos(d); videoLoaded = true; loadUpload(); }
       document.title = '영상 제작 완료';
     } else if (d.state === 'stopped') {
       terminal = true;
@@ -58,7 +59,9 @@ function make(tag, text, className) { const n = document.createElement(tag); if 
 function showDelivery(delivery) {
   if (!delivery?.status) return;
   el('delivery-result').hidden = false;
+  el('delivery-links').replaceChildren();
   el('delivery-status').textContent = delivery.status === 'complete' ? '업로드가 완료되었습니다.' :
+    delivery.status === 'awaiting_studio_audio' ? '영상 업로드 완료 · YouTube Studio에서 언어별 음성 게시가 남아 있습니다.' :
     delivery.status === 'skipped' ? '자동 업로드를 사용하지 않았습니다.' : (delivery.error || '업로드 결과를 확인해야 합니다.');
   if (delivery.status === 'failed') el('status').textContent = '영상 제작 완료 · 업로드 확인 필요';
   for (const entry of delivery.items || []) {

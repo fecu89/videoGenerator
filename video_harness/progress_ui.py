@@ -67,6 +67,8 @@ class ProgressMonitor:
         self.initial = {p: signature(p) for p in (self.video, self.report, self.qa, *self.language_videos.values())}
         self.delivery_report = self.run / 'delivery-report.json'
         self.initial_delivery = signature(self.delivery_report)
+        self.failure_report = self.run / 'production-failure.json'
+        self.initial_failure = signature(self.failure_report)
         self.alive = alive or self.process_alive
         self.counts = {}
         self.process_identity = self.process_info()
@@ -127,6 +129,10 @@ class ProgressMonitor:
             if not valid:
                 staged_qa = read_json(self.staging / self.qa.relative_to(self.run))
                 issues = staged_qa.get('issues', []) if staged_qa.get('status') == 'failed' else []
+                if not issues and signature(self.failure_report) != self.initial_failure:
+                    failure = read_json(self.failure_report)
+                    if failure.get('pid') == self.pid and failure.get('quality') == self.quality:
+                        issues = failure.get('issues') or [{'code': 'production_failed', 'message': failure.get('error', '제작 실패')}]
             if valid:
                 completed = self.total
         stage, detail = self.postprocess() if state == 'finishing' else ('', '')

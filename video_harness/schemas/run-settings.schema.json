@@ -178,7 +178,8 @@
           "default": "shared",
           "enum": [
             "shared",
-            "language_path"
+            "language_path",
+            "ko_only"
           ],
           "title": "Locale Mode",
           "type": "string"

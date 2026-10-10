@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import argparse
+import json
+import os
+from datetime import datetime, timezone
 import shutil
 import stat
 import tempfile
@@ -309,6 +312,40 @@ def _existing_owned_paths(run_dir: Path, roots: Sequence[str]) -> list[str]:
     return sorted(paths)
 
 
+@contextmanager
+def _record_production_failure(run_dir: Path, quality: str):
+    """Keep fresh failure diagnostics outside publication rollback ownership."""
+    qa_paths = [run_dir / 'videoFiles/sequences/draft/qa-report.json', run_dir / 'qa-report.json']
+    def read(path):
+        try:
+            return (path.stat().st_mtime_ns, path.read_bytes())
+        except OSError:
+            return None
+    initial = {path: read(path) for path in qa_paths}
+    try:
+        yield
+    except Exception as error:
+        issues = []
+        for path in qa_paths:
+            current = read(path)
+            if current is None or current == initial[path]:
+                continue
+            try:
+                qa = json.loads(current[1])
+                if qa.get('status') == 'failed':
+                    issues.extend(qa.get('issues', []))
+            except (ValueError, TypeError):
+                continue
+        failure = dict(schema_version=1, quality=quality, pid=os.getpid(),
+                       failed_at=datetime.now(timezone.utc).isoformat(),
+                       error=str(error), issues=issues)
+        try:
+            atomic_write(run_dir / 'production-failure.json', json.dumps(failure, ensure_ascii=False, indent=2) + '\n')
+        except OSError as diagnostic_error:
+            error.add_note(f'Could not preserve failure diagnostics: {diagnostic_error}')
+        raise
+
+
 def produce(
     run_dir: Path,
     *,
@@ -355,7 +392,7 @@ def produce(
             )
         )
 
-    with _preserve_artifacts(run_dir, protected):
+    with _preserve_artifacts(run_dir, protected), _record_production_failure(run_dir, quality):
         performance = PerformanceRecorder(
             quality=quality,
             encoder_settings={

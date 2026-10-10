@@ -118,3 +118,16 @@ def test_language_video_endpoint_serves_selected_video_only_after_completion(tmp
         server.shutdown()
         server.server_close()
         thread.join()
+
+
+def test_progress_shows_fresh_failure_after_qa_rollback(tmp_path):
+    monitor = ProgressMonitor(tmp_path, tmp_path, 123, 10, 'draft', alive=lambda: False)
+    write_json(tmp_path / 'production-failure.json', {'quality': 'draft', 'pid': 123,
+        'error': 'draft QA failed', 'issues': [{'code': 'bad_frame', 'message': 'frame 42'}]})
+    status = monitor.status()
+    assert status['state'] == 'stopped'
+    assert status['issues'] == [{'code': 'bad_frame', 'message': 'frame 42'}]
+    # A prior attempt or another producer must not be attributed to this process.
+    write_json(tmp_path / 'production-failure.json', {'quality': 'draft', 'pid': 456,
+        'error': 'another failure', 'issues': [{'code': 'unrelated'}]})
+    assert monitor.status()['issues'] == []

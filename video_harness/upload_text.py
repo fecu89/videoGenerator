@@ -13,13 +13,13 @@ import re
 import struct
 import sys
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 from .localize import MASTER, language_outputs
 from .models import ScriptArtifact
-from .settings import resolve_run_settings
-from .shorts import SHORTS_DIR, load_upload_overrides, shorts_name, shorts_titles
+from .settings import PromotionSettings, resolve_run_settings
+from .shorts import OVERRIDES_FILENAME, SHORTS_DIR, load_upload_overrides, shorts_name, shorts_titles
 from .storage import atomic_write
 from .translations import TRANSLATIONS_FILENAME, Translations, load_translations
 
@@ -109,17 +109,27 @@ def credit_warnings(credits: Sequence[ModelCredit]) -> list[str]:
     return warnings
 
 
-def credits_block(lang: str, credits: Sequence[ModelCredit], music: str | None) -> str:
+def credits_block(lang: str, credits: Sequence[ModelCredit], music: str | None, *, include_urls: bool = True) -> str:
     _, models_label, music_label = LABELS.get(lang, LABELS["en"])
     lines: list[str] = []
     if credits:
         lines.append(models_label)
-        lines.extend(credit.line for credit in credits)
+        lines.extend((credit if include_urls else replace(credit, source=None)).line for credit in credits)
         licenses = {credit.license: credit.license_url for credit in credits if credit.license and credit.license_url}
-        lines.extend(f"{name}: {url}" for name, url in sorted(licenses.items()))
+        if include_urls:
+            lines.extend(f"{name}: {url}" for name, url in sorted(licenses.items()))
     if music:
         lines.extend(([""] if lines else []) + [f"{music_label}: {music}"])
     return "\n".join(lines)
+
+
+def without_web_urls(text: str) -> str:
+    """Keep readable link labels and credit names in copy for channels without URLs."""
+    text = re.sub(r"\[([^\]]+)\]\((?:https?://|www\.)[^)]+\)", r"\1", text, flags=re.I)
+    text = re.sub(r'''(?:https?://|www\.)[^\s<>()\[\]"'，。！？、]+''', "", text, flags=re.I)
+    text = re.sub(r'''(?<![\w@])(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,63}(?::[0-9]+)?(?:[/#?][^\s<>()\[\]"'，。！？、]*)?''', "", text, flags=re.I)
+    text = "\n".join(re.sub(r"[ \t]+", " ", line).strip(" \t—:;") for line in text.splitlines())
+    return re.sub(r"\n{3,}", "\n\n", text).strip()
 
 
 def _box(text: str) -> list[str]:
@@ -156,11 +166,17 @@ def upload_sheet(run_dir: Path) -> dict:
     music = Path(music_file).stem if music_file.strip() else None
     short_titles = shorts_titles(run, languages)
     overrides = load_upload_overrides(run)
+    promotion = getattr(settings, "promotion", None)
+    override_path = run / OVERRIDES_FILENAME
+    if override_path.is_file():
+        metadata = json.loads(override_path.read_text(encoding="utf-8"))
+        if "promotion" in metadata:
+            promotion = PromotionSettings.model_validate(metadata["promotion"])
     entries = []
     for lang in languages:
         title, description = _texts(script, translations, lang, overrides)
-        block = credits_block(lang, credits, music)
-        promotion = getattr(settings, "promotion", None)
+        omit_urls = promotion is not None and promotion.locale_mode == "ko_only" and lang != MASTER
+        block = credits_block(lang, credits, music, include_urls=not omit_urls)
         url = promotion.url_for(lang) if promotion else ""
         website_label = {"ko": "웹사이트", "en": "Website", "ja": "ウェブサイト", "zh": "网站", "es": "Sitio web"}.get(lang, "Website")
         promotion_block = f"{website_label}: {url}" if url else ""
@@ -170,6 +186,10 @@ def upload_sheet(run_dir: Path) -> dict:
         if (run / SHORTS_DIR / shorts_name(lang, "final")).is_file():
             entry["shorts_title"] = short_titles.get(lang) or title
             entry["shorts_description"] = "\n\n".join(part for part in (description, "#Shorts", promotion_block, block) if part)
+        if omit_urls:
+            for key in ("title", "description", "shorts_title", "shorts_description"):
+                if entry[key] is not None:
+                    entry[key] = without_web_urls(entry[key])
         entries.append(entry)
     return {"title": script.selected_topic.title, "warnings": credit_warnings(credits), "languages": entries}
 

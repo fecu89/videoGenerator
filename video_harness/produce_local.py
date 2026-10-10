@@ -279,7 +279,10 @@ def _seed_approved_draft(run_dir: Path, staging: Path) -> None:
     for relative in _APPROVED_DRAFT_DIRECTORIES:
         source = run_dir / relative
         if source.is_dir() and not source.is_symlink():
-            shutil.copytree(source, staging / relative, dirs_exist_ok=True)
+            # Older continuity experiments left optional diagnostics beside the
+            # draft records. They are not render inputs or publishable outputs.
+            shutil.copytree(source, staging / relative, dirs_exist_ok=True,
+                            ignore=shutil.ignore_patterns("*-continuity-refinement.json"))
 
 
 def _is_documented_internal(relative: str) -> bool:

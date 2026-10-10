@@ -225,7 +225,7 @@ class PromotionSettings(StrictModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     base_url: str = ""
-    locale_mode: Literal["shared", "language_path"] = "shared"
+    locale_mode: Literal["shared", "language_path", "ko_only"] = "shared"
 
     @field_validator("base_url")
     @classmethod
@@ -239,6 +239,8 @@ class PromotionSettings(StrictModel):
         return str(url).rstrip("/")
 
     def url_for(self, lang: str) -> str:
+        if self.locale_mode == "ko_only":
+            return self.base_url if lang == "ko" else ""
         if not self.base_url or self.locale_mode == "shared" or lang == "ko":
             return self.base_url
         url = urlsplit(self.base_url)

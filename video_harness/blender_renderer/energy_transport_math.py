@@ -29,6 +29,17 @@ def radiation_budget(latitude):
     return 1 - 3 * math.sin(math.radians(latitude)) ** 2
 
 
+def radiation_fluxes(latitude):
+    """Schematic absorbed solar / emitted thermal flux on one common scale.
+
+    Both decline poleward; absorption declines faster. Their difference is
+    0.4 * radiation_budget, preserving the transport maximum. Not observed W/m²
+    or a claim that tropical cloud effects are a monotonic latitude function.
+    """
+    sin2 = math.sin(math.radians(latitude)) ** 2
+    return 1.8 - 1.7 * sin2, 1.4 - .5 * sin2
+
+
 def transport(latitude):
     phi = math.radians(latitude)
     return math.sin(phi) * math.cos(phi) ** 2
@@ -62,11 +73,16 @@ def aisle_motion(progress):
 
 
 class Story:
-    def __init__(self,timeline,fps):
+    def __init__(self,timeline,fps,camera_transition_seconds=.4):
         self.fps=fps
+        self.camera_transition_seconds=camera_transition_seconds
+        self.camera_moves={}
         self.spans={}
         for beat in timeline:
-            sid=beat['controller_options']['scene_id']
+            options=beat['controller_options']
+            sid=options['scene_id']
+            if 'camera_move_seconds' in options:
+                self.camera_moves[sid]=(options['camera_move_seconds'],options.get('camera_lead_seconds',0.))
             a,z=self.spans.get(sid,(beat['start_frame'],beat['end_frame']))
             self.spans[sid]=(min(a,beat['start_frame']),max(z,beat['end_frame']))
         self.ledger=coin_ledger([3,2,1,-2])
@@ -121,23 +137,33 @@ class Story:
                 if q>=1:owners[cid]=4
         # Broad classroom views establish the setting; close views follow the
         # very same transfer. The Earth/classroom analogy uses two explicit cuts.
-        def camera_pose(scene):
+        def camera_pose(scene,at_frame):
             if scene in (4,5,11):return ((-6.2,-4.0,4.6),(0.,.3,.75),42.)
             if 6<=scene<=10:
                 d={6:0,7:1,8:2,9:3,10:3}[scene]
-                if scene in (6,7,8):q=self.progress(frame,scene,.48,.92)
-                elif scene==10:q=self.progress(frame,scene,.59,.94)
+                if scene in (6,7,8):q=self.progress(at_frame,scene,.48,.92)
+                elif scene==10:q=self.progress(at_frame,scene,.59,.94)
                 else:q=0
                 x,forward,_=aisle_motion(q)
                 y=DESK_Y[d]+1.2*forward
                 return ((x-1.55,y-.8,2.15),(x,y,.83),43.)
             if scene in (3,14,15):return ((-.3,14.7,5.2),(0.,21.7,3.7),43.)
             return ((-.4,9.,4.2),(0.,22.,3.),43.)
-        eye,look,lens=camera_pose(sid)
-        if sid not in (1,4,12):
-            q=smooth((frame-self.spans[sid][0])/(self.fps*.4))
-            prev=camera_pose(sid-1)
-            eye=mix(prev[0],eye,q);look=mix(prev[1],look,q);lens=prev[2]+(lens-prev[2])*q
+        eye,look,lens=camera_pose(sid,frame)
+        # Authored dolly moves can begin in the previous narration scene. The
+        # target and common clock stay intact while the viewer approaches it.
+        for destination in range(2,17):
+            if destination in (4,12):continue  # Separate physical locations.
+            duration,lead=self.camera_moves.get(destination,(self.camera_transition_seconds,0.))
+            start=self.spans[destination][0]-lead*self.fps
+            end=start+duration*self.fps
+            if start<=frame<end and duration>0:
+                q=smooth((frame-start)/(duration*self.fps))
+                prev=camera_pose(destination-1,frame)
+                target=camera_pose(destination,frame)
+                eye=mix(prev[0],target[0],q);look=mix(prev[1],target[1],q)
+                lens=prev[2]+(target[2]-prev[2])*q
+                break
         return dict(scene_id=sid,time=t,coins=pos,coin_desks=owners,spent=spent,
                     classroom=4<=sid<=11,camera=(eye,look,lens),
                     transferred=[self.progress(frame,s,.48,.92) for s in (6,7,8)]+[self.progress(frame,10,.59,.94)],

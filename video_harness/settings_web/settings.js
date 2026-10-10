@@ -297,6 +297,7 @@
     const promotion = state.settings.promotion;
     const base = promotion.base_url.trim().replace(/\/+$/, "");
     preview.textContent = base ? ["ko", "en", "ja", "zh", "es"].map(lang => {
+      if (promotion.locale_mode === "ko_only" && lang !== "ko") return `${lang}: 출처 포함 웹주소 없음`;
       let localized = base;
       if (promotion.locale_mode === "language_path" && lang !== "ko") {
         try {
@@ -306,7 +307,7 @@
       }
       return `${lang}: ${localized}`;
     }).join(" · ")
-      : "홍보 링크를 넣지 않습니다.";
+      : promotion.locale_mode === "ko_only" ? "홍보 링크 없음 · 한국어 외에는 출처 포함 웹주소를 제외합니다." : "홍보 링크를 넣지 않습니다.";
   }
 
   function buildControl(item) {

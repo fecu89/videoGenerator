@@ -138,3 +138,32 @@ def test_four_remaining_coins_keep_their_spacing_in_transit():
         for i,a in enumerate(positions):
             for b in positions[i+1:]:
                 assert math.dist(a,b)>.21, 'repacking the remaining coins causes them to intersect'
+
+
+def test_radiation_arrows_decrease_poleward_and_match_transport_budget():
+    m = module()
+    low_in, low_out = m.radiation_fluxes(12)
+    high_in, high_out = m.radiation_fluxes(60)
+    assert low_in > high_in > 0
+    assert low_out > high_out > 0
+    assert low_in > low_out and high_in < high_out
+    assert low_in - high_in > low_out - high_out
+    for latitude in range(-90, 91, 5):
+        absorbed, emitted = m.radiation_fluxes(latitude)
+        assert absorbed > 0 and emitted > 0
+        assert absorbed - emitted == pytest.approx(.4 * m.radiation_budget(latitude), abs=1e-12)
+
+
+def test_authored_camera_approach_begins_before_narration_boundary():
+    m=module();job=fixture_job()
+    job['timeline'][2]['controller_options'].update(camera_move_seconds=3.2,camera_lead_seconds=1.6)
+    story=m.Story(job['timeline'],30)
+    # Scene 2 already moves towards the same globe, arriving during scene 3.
+    far=story.state(540)['camera'][0]
+    approaching=story.state(580)['camera'][0]
+    boundary=story.state(600)['camera'][0]
+    close=story.state(660)['camera'][0]
+    assert far[1] < approaching[1] < boundary[1] < close[1]
+    # Draft-rate neighbouring poses must not cover the entire move in one step.
+    assert max(math.dist(story.state(f)['camera'][0],story.state(f+3)['camera'][0])
+               for f in range(550,650)) < .3

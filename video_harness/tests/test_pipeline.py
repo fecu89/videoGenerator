@@ -425,3 +425,39 @@ def test_produce_refuses_keywords_run_without_preview_approval(
         produce(tmp_path, quality="draft")
 
     assert pipeline_spies.render == 0
+
+
+def test_failed_qa_diagnostics_survive_publication_rollback(tmp_path, monkeypatch, pipeline_spies):
+    import video_harness.pipeline as module
+    qa_path = 'videoFiles/sequences/draft/qa-report.json'
+    monkeypatch.setattr(module, '_video_protection_paths', lambda *_: [qa_path, 'final-draft.mp4'])
+    def fail(run, **kwargs):
+        path = run / qa_path
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({'status': 'failed', 'issues': [{'code': 'bad_frame', 'message': 'frame 42'}]}))
+        (run / 'final-draft.mp4').write_bytes(b'unapproved')
+        raise ValueError('draft QA failed')
+    monkeypatch.setattr(module, 'produce_local', fail)
+    with pytest.raises(ValueError, match='draft QA failed'):
+        produce(tmp_path, output_mode='video_only')
+    assert not (tmp_path / 'final-draft.mp4').exists()
+    assert not (tmp_path / qa_path).exists()
+    failure = json.loads((tmp_path / 'production-failure.json').read_text())
+    assert failure['quality'] == 'draft'
+    assert failure['issues'] == [{'code': 'bad_frame', 'message': 'frame 42'}]
+    assert failure['error'] == 'draft QA failed'
+
+
+def test_identical_qa_failure_is_recorded_again_after_fresh_write(tmp_path):
+    from video_harness.pipeline import _record_production_failure
+    import os
+    qa = tmp_path / 'qa-report.json'
+    data = json.dumps({'status':'failed','issues':[{'code':'same_failure'}]})
+    qa.write_text(data)
+    os.utime(qa, ns=(1,1))
+    with pytest.raises(ValueError):
+        with _record_production_failure(tmp_path, 'final'):
+            qa.write_text(data)
+            raise ValueError('final QA failed')
+    failure = json.loads((tmp_path / 'production-failure.json').read_text())
+    assert failure['issues'] == [{'code':'same_failure'}]

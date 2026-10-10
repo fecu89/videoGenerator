@@ -74,7 +74,7 @@ class EnergyTransportGallery(TransferEquationStoryGallery):
         self.bg=self.scene.world.node_tree.nodes['Background']
         self.bg.inputs['Color'].default_value=(.12,.17,.25,1)
         self.bg.inputs['Strength'].default_value=.25
-        self.story=em.Story(self.job['timeline'],self.job['canonical_fps'])
+        self.story=em.Story(self.job['timeline'],self.job['canonical_fps'],self.job.get('camera_transition_seconds',.4))
         self.room_objects=[];self.room_lights=[];self.fade_sockets=[]
         self.build_coin_proto()
         self.build_classroom()
@@ -158,19 +158,20 @@ class EnergyTransportGallery(TransferEquationStoryGallery):
             for j in range(12):
                 o=self.ball(f'EnergyPacket{sign}_{j}',self.globe_point(sign*(j*7+1)),(.045,)*3,white)
                 o.visible_shadow=False;self.particles.append(o);self.space_objects.append(o)
-        # Two radiation comparisons: long incoming/short outgoing at low latitude,
-        # short incoming/long outgoing at high latitude. These are qualitative.
+        # Both fluxes decrease poleward on the same geometric scale; absorbed
+        # sunlight decreases faster, so the local budget changes sign.
         self.radiation=[]
         yellow=self.emission('Absorbed sunlight',(1.,.78,.12),1.6,alpha=False)
         red=self.emission('Energy emitted to space',(1.,.24,.075),1.2,alpha=False)
-        for lat,inc,out in [(12,1.7,.8),(60,.7,1.55)]:
-            p=Vector(self.globe_point(lat,-28))
+        for lat in (12,60):
+            inc,out=em.radiation_fluxes(lat)
+            p=Vector(self.globe_point(lat,-10))
             for kind,length,mat,dz in [('Incoming',inc,yellow,-.20),('Outgoing',out,red,.20)]:
-                if kind=='Incoming':a=p+Vector((-length,0,dz));b=p+Vector((-.05,0,dz))
-                else:a=p+Vector((-.12,0,dz));b=p+Vector((-length,0,dz))
-                direction=(b-a).normalized();end=b-direction*.20
+                near=p+Vector((-.05,0,dz));far=near+Vector((-length,0,0))
+                a,b=(far,near) if kind=='Incoming' else (near,far)
+                direction=(b-a).normalized();end=b-direction*.23
                 shaft=self.rod(f'{kind}{lat}',a,end,.035,mat)
-                bpy.ops.mesh.primitive_cone_add(vertices=20,radius1=.10,radius2=0,depth=.23,location=end+direction*.10)
+                bpy.ops.mesh.primitive_cone_add(vertices=20,radius1=.10,radius2=0,depth=.23,location=end+direction*.115)
                 head=bpy.context.object;head.name=f'{kind}Head{lat}';head.data.materials.append(mat)
                 head.rotation_euler=direction.to_track_quat('Z','Y').to_euler()
                 self.radiation += [shaft,head];self.space_objects += [shaft,head]
@@ -185,8 +186,7 @@ class EnergyTransportGallery(TransferEquationStoryGallery):
         for o,p in zip(self.coins,st['coins']):o.location=p;o.scale=(1.,1.,1.)
         for i,o in enumerate(self.traces):o.hide_render=not room or st['transferred'][i]<.98
         for o in self.radiation:
-            intro_sun=st['scene_id']<=3 and o.name.startswith('Incoming') and '12' in o.name
-            o.hide_render=room or (st['scene_id']<13 and not intro_sun)
+            o.hide_render=room or st['scene_id']<13
         for o in self.rings:o.hide_render=room or st['peak_reveal']<.01
         for index,o in enumerate(self.particles):
             sign=-1 if index<12 else 1

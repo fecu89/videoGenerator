@@ -846,3 +846,19 @@ def test_produce_local_requires_stage_approval_for_keywords_runs(monkeypatch, tm
     (tmp_path / "run-settings.json").write_text('{"schema_version": 4, "local_video": {"text_policy": "keywords"}}')
     with pytest.raises(ValueError, match="프리뷰승인"):
         module.produce_local(tmp_path, quality="draft", settings=HarnessSettings(local_video={"text_policy": "keywords"}))
+
+
+def test_seed_approved_draft_does_not_publish_legacy_continuity_diagnostics(tmp_path):
+    from video_harness.produce_local import _seed_approved_draft
+    run, stage = tmp_path / 'run', tmp_path / 'stage'
+    draft = run / 'videoFiles/sequences/draft'
+    draft.mkdir(parents=True)
+    (draft / 'SEQ01-continuity-refinement.json').write_text('{"diagnostic": true}')
+    (draft / 'SEQ01-render-record.json').write_text('{"fingerprint": "reviewed"}')
+    (draft / 'SEQ01.mp4').write_bytes(b'reviewed video')
+    _seed_approved_draft(run, stage)
+    copied = stage / 'videoFiles/sequences/draft'
+    assert not (copied / 'SEQ01-continuity-refinement.json').exists()
+    assert (copied / 'SEQ01-render-record.json').read_bytes() == (draft / 'SEQ01-render-record.json').read_bytes()
+    assert (copied / 'SEQ01.mp4').read_bytes() == b'reviewed video'
+    assert (draft / 'SEQ01-continuity-refinement.json').exists()
