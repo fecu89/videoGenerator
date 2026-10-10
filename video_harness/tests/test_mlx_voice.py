@@ -596,8 +596,8 @@ def test_short_phrase_recovers_after_mixed_truncation_and_tempo_rejections(
     fake = FakeModel(
         sample_rate=1000,
         audio_by_call=[np.full(n, .2, dtype=np.float32)
-                       for n in (958, 1263, 1581, last_samples)],
-        token_counts=[13, 17, 20, 15],
+                       for n in (958, 1263, 1581, last_samples, last_samples, last_samples)],
+        token_counts=[13, 17, 20, 15, 15, 15],
     )
     synth, runtime, _ = configured_synthesizer(
         tmp_path, fake_model=fake,
@@ -1088,3 +1088,20 @@ def test_publication_failure_restores_all_existing_destinations(tmp_path: Path):
 
     assert final_destinations[1].read_bytes() == b"old-one"
     assert final_destinations[2].read_bytes() == b"old-two"
+
+
+def test_truncated_candidates_do_not_exhaust_completed_candidate_tempo_budget(tmp_path):
+    # A short approved phrase can use 2 of 4 attempts just finishing the text.
+    # Four completed candidates must still be available, with the same speed cap.
+    from video_harness.settings import VoiceSettings as CurrentVoiceSettings
+    fake=FakeModel(sample_rate=1000,
+        audio_by_call=[np.full(n,.2,dtype=np.float32) for n in (2900,2500,4400,2500,2100)],
+        token_counts=[29,35,44,40,30])
+    synth,runtime,_=configured_synthesizer(tmp_path,fake_model=fake,
+        voice_settings=CurrentVoiceSettings(target_syllables_per_second=6.5,speaking_rate=1.,max_tempo_factor=1.4))
+    audio,rate,report=synth._generate_sentence(model=fake,runtime=runtime,
+        sentence='그 안에 전류가 유도됩니다.',instruction='전역 지시',scene_id=16,sentence_index=2)
+    assert len(audio)==2100
+    assert report.tempo_factor<=1.4
+    assert report.token_count<report.hard_token_limit
+    assert report.attempt_count==5

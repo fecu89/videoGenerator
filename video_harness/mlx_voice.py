@@ -40,6 +40,7 @@ TOKEN_HEADROOM_RATIO = 1.3
 # Short pause-delimited phrases can consume attempts on both completion and
 # tempo checks. Keep one more candidate without relaxing either quality gate.
 MAX_SENTENCE_GENERATION_ATTEMPTS = 4
+MAX_SENTENCE_COMPLETION_RETRIES = 3
 
 
 def sentence_timing_budget(
@@ -188,8 +189,12 @@ class MLXAudioSynthesizer(AudioSynthesizer):
         budget = sentence_timing_budget(sentence, self.settings)
         last_rejection = "unknown candidate rejection"
         hard_token_limit = budget.hard_token_limit
-        for attempt in range(MAX_SENTENCE_GENERATION_ATTEMPTS):
-            seed = self.settings.seed + attempt
+        quality_attempts = 0
+        completion_retries = 0
+        attempts = 0
+        while quality_attempts < MAX_SENTENCE_GENERATION_ATTEMPTS:
+            seed = self.settings.seed + attempts
+            attempts += 1
             runtime.seed(seed)
             generated = list(
                 model.generate_custom_voice(
@@ -223,6 +228,7 @@ class MLXAudioSynthesizer(AudioSynthesizer):
             token_count = getattr(result, "token_count", None)
             if token_count is None:
                 last_rejection = "missing acoustic token count"
+                quality_attempts += 1
                 continue
             token_count = int(token_count)
             if token_count >= hard_token_limit:
@@ -231,8 +237,13 @@ class MLXAudioSynthesizer(AudioSynthesizer):
                 )
                 # Allow completion of model-inserted pauses before trimming them.
                 # Final silence, tempo and scene-duration gates remain unchanged.
-                hard_token_limit = min(self.settings.max_tokens, math.ceil(hard_token_limit * 1.5))
+                expanded = min(self.settings.max_tokens, math.ceil(hard_token_limit * 1.5))
+                if completion_retries >= MAX_SENTENCE_COMPLETION_RETRIES or expanded == hard_token_limit:
+                    break
+                completion_retries += 1
+                hard_token_limit = expanded
                 continue
+            quality_attempts += 1
             original_pause_ms = longest_internal_silence_ms(
                 audio,
                 sample_rate=sample_rate,
@@ -278,7 +289,7 @@ class MLXAudioSynthesizer(AudioSynthesizer):
                         result, "processing_time_seconds", None
                     ),
                     peak_memory_usage=getattr(result, "peak_memory_usage", None),
-                    attempt_count=attempt + 1,
+                    attempt_count=attempts,
                     spoken_units=budget.spoken_units,
                     target_output_seconds=budget.target_output_seconds,
                     soft_token_budget=budget.soft_token_budget,
@@ -290,6 +301,6 @@ class MLXAudioSynthesizer(AudioSynthesizer):
             )
         raise RuntimeError(
             f"scene {scene_id} sentence {sentence_index} failed delivery quality "
-            f"budget after {MAX_SENTENCE_GENERATION_ATTEMPTS} attempts: "
+            f"budget after {attempts} attempts: "
             f"{last_rejection}"
         )

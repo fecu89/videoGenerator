@@ -270,7 +270,23 @@ class EnergyTransportSimulationConfig(StrictModel):
     scenes: list[SpectralScene] = Field(min_length=1)
 
 
+class GeomagneticPhysics(StrictModel):
+    model: Literal['conceptual-geodynamo-dipole']
+
+
+class GeomagneticSimulationConfig(StrictModel):
+    schema_version: Literal[1]
+    preset: Literal['geomagnetic-dynamo-blender']
+    output: OutputSettings
+    physics: GeomagneticPhysics
+    style: VorticityStyle
+    scenes: list[SpectralScene] = Field(min_length=1)
+
+
 def _validate_schema(payload: object) -> None:
+    if isinstance(payload, dict) and payload.get('preset') == 'geomagnetic-dynamo-blender':
+        GeomagneticSimulationConfig.model_validate(payload)
+        return
     if isinstance(payload, dict) and payload.get('preset') == 'energy-transport-blender':
         EnergyTransportSimulationConfig.model_validate(payload)
         return
@@ -333,7 +349,9 @@ def load_simulation(run_dir: Path, script: ScriptArtifact) -> SimulationConfig |
         raise ValueError(f"simulation.json을 읽을 수 없습니다: {error}") from error
 
     _validate_schema(payload)
-    if payload.get('preset') == 'energy-transport-blender':
+    if payload.get('preset') == 'geomagnetic-dynamo-blender':
+        config = GeomagneticSimulationConfig.model_validate(payload)
+    elif payload.get('preset') == 'energy-transport-blender':
         config = EnergyTransportSimulationConfig.model_validate(payload)
     elif payload.get('preset') == 'typhoon-beta-blender':
         config = TyphoonBetaSimulationConfig.model_validate(payload)

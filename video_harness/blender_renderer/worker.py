@@ -19,7 +19,11 @@ def main():
     path=Path(sys.argv[sys.argv.index('--')+1])
     job=json.loads(path.read_text())
     gallery_class=SpectralGallery
-    if job.get('scene_graph')=='energy-transport-blender-v1':
+    if job.get('scene_graph')=='geomagnetic-dynamo-blender-v1':
+        from geomagnetic import GeomagneticGallery
+        from geomagnetic_math import validate_job as validate_geomagnetic_job
+        validate_geomagnetic_job(job);gallery_class=GeomagneticGallery
+    elif job.get('scene_graph')=='energy-transport-blender-v1':
         from energy_transport import EnergyTransportGallery
         from energy_transport_math import validate_job as validate_energy_job
         validate_energy_job(job);gallery_class=EnergyTransportGallery

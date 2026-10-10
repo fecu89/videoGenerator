@@ -386,7 +386,7 @@ def _write_render_record(
 
 
 def _physics_payload(config: SimulationConfig) -> dict[str, object]:
-    if config.preset in {"stellar-spectra-blender", "sun-earth-moon-blender", "vorticity-blender", "bonding-blender", "coriolis-blender", "phantom-jam-blender", "optical-depth-blender", "transfer-equation-blender", "virial-galaxy-blender", "adiabatic-blender", "saturn-rings-blender", "typhoon-beta-blender", "energy-transport-blender"}:
+    if config.preset in {"stellar-spectra-blender", "sun-earth-moon-blender", "vorticity-blender", "bonding-blender", "coriolis-blender", "phantom-jam-blender", "optical-depth-blender", "transfer-equation-blender", "virial-galaxy-blender", "adiabatic-blender", "saturn-rings-blender", "typhoon-beta-blender", "energy-transport-blender", "geomagnetic-dynamo-blender"}:
         return config.physics.model_dump(mode="json")
     return {
         "earth_period_days": config.physics.earth_period_days,
@@ -398,7 +398,7 @@ def _physics_payload(config: SimulationConfig) -> dict[str, object]:
 
 
 def _style_payload(config: SimulationConfig) -> dict[str, object]:
-    if config.preset in {"stellar-spectra-blender", "sun-earth-moon-blender", "vorticity-blender", "bonding-blender", "coriolis-blender", "phantom-jam-blender", "optical-depth-blender", "transfer-equation-blender", "virial-galaxy-blender", "adiabatic-blender", "saturn-rings-blender", "typhoon-beta-blender", "energy-transport-blender"}:
+    if config.preset in {"stellar-spectra-blender", "sun-earth-moon-blender", "vorticity-blender", "bonding-blender", "coriolis-blender", "phantom-jam-blender", "optical-depth-blender", "transfer-equation-blender", "virial-galaxy-blender", "adiabatic-blender", "saturn-rings-blender", "typhoon-beta-blender", "energy-transport-blender", "geomagnetic-dynamo-blender"}:
         return config.style.model_dump(mode="json")
     return {
         "seed": config.style.seed,
