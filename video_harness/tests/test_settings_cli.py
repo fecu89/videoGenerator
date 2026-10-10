@@ -49,4 +49,4 @@ def test_refresh_writes_snapshot_before_printing(tmp_path: Path, capsys: pytest.
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
     assert (run_dir / "run-settings.json").is_file()
-    assert payload["settings"]["schema_version"] == 6
+    assert payload["settings"]["schema_version"] == 7

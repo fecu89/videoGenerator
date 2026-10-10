@@ -1,0 +1,75 @@
+{
+  "$defs": {
+    "RenderSourceSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "engine": {
+          "enum": [
+            "blender",
+            "threejs"
+          ],
+          "title": "Engine",
+          "type": "string"
+        },
+        "entrypoint": {
+          "title": "Entrypoint",
+          "type": "string"
+        },
+        "validator": {
+          "title": "Validator",
+          "type": "string"
+        },
+        "source_files": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Files",
+          "type": "array"
+        },
+        "assets": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Assets",
+          "type": "array"
+        }
+      },
+      "required": [
+        "engine",
+        "entrypoint",
+        "validator",
+        "source_files"
+      ],
+      "title": "RenderSourceSpec",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "simulation_schema": {
+      "title": "Simulation Schema",
+      "type": "string"
+    },
+    "graphs": {
+      "additionalProperties": {
+        "$ref": "#/$defs/RenderSourceSpec"
+      },
+      "minProperties": 1,
+      "title": "Graphs",
+      "type": "object"
+    }
+  },
+  "required": [
+    "simulation_schema",
+    "graphs"
+  ],
+  "title": "RenderSourceManifest",
+  "type": "object"
+}

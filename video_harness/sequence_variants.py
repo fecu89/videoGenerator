@@ -380,12 +380,16 @@ def _render_sequence_override(
     base_cache: _CacheSnapshot,
     override: SequenceVariantOverride,
     backend: SequenceRenderBackend,
+    settings: HarnessSettings | None = None,
     performance: PerformanceRecorder | None = None,
 ) -> SequenceResult:
     store = RunStore.open(run_dir)
     script = store.read_script()
     script_by_id = {scene.scene_id: scene for scene in script.scenes}
     simulation = load_simulation(store.root, script)
+    from .settings import resolve_run_settings
+    from .pacing_presets import render_pacing_values
+    settings = settings or resolve_run_settings(run_dir)
     canonical_cache = json.loads(json.dumps(base_cache.payload))
 
     state_cache_path = sequence_render_module._artifact_path(
@@ -428,6 +432,12 @@ def _render_sequence_override(
         "style": sequence_render_module._style_payload(simulation),
         "variant_profile": _variant_profile(override),
     }
+    timing = getattr(settings, 'local_video', None)
+    if timing is not None:
+        job['camera_transition_seconds'] = timing.camera_transition_seconds
+    pacing = render_pacing_values(settings)
+    if pacing is not None:
+        job['pacing'] = pacing
     if not _cache_matches(base_cache) or not _cache_matches(workspace_cache):
         raise ValueError(
             f"sequence {sequence.sequence_id} canonical cache changed before rendering"
@@ -886,7 +896,12 @@ def assemble_sequence_variants(
         raise ValueError("base render local-sequence-plan hash differs from variant plan")
     if variant_mode not in {"four", "balanced_only"}:
         raise ValueError(f"unknown variant mode: {variant_mode}")
-    settings = settings or HarnessSettings()
+    from .settings import resolve_run_settings
+    settings = settings or (
+        resolve_run_settings(run_dir)
+        if (run_dir / 'run-settings.json').is_file()
+        else HarnessSettings()
+    )
 
     planned_ids = [sequence.sequence_id for sequence in local.sequences]
     base_ids = [result.sequence_id for result in base_report.sequences]
@@ -907,7 +922,7 @@ def assemble_sequence_variants(
         for sequence_id in planned_ids
     }
 
-    active_backend = backend or sequence_render_module.backend_for_plan(local)
+    active_backend = backend or sequence_render_module.backend_for_plan(local, run_dir=run_dir, settings=settings)
     active_backend.check_dependencies()
     outputs: list[SequenceVariantOutput] = []
     transaction_root, workspaces_root = _prepare_transaction_root(artifact_root)
@@ -975,6 +990,7 @@ def assemble_sequence_variants(
                         base_cache=base_caches[sequence_id],
                         override=override,
                         backend=active_backend,
+                        settings=settings,
                         performance=performance,
                     )
                     results.append(result)

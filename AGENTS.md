@@ -107,6 +107,22 @@ runs/<run>`과 `python -m video_harness upload-text runs/<run>`을 쓴다. 대�
 
 테스트, 문서 편집, 읽기 전용 점검에는 설정 화면을 열지 않는다. 기존 실행은 `run-settings.json`을 계속 사용하며 사용자가 명시적으로 요청하지 않는 한 `--refresh-settings`를 실행하지 않는다. 설정을 바꾸기 위해 구현 상수를 직접 수정하지 않는다.
 
+## 영상별 코드와 렌더 설정
+
+새 영상의 장면·계산·검증 코드·전용 테스트는 `runs/<run>/scripts/`, 자산은
+`assets/`, 재생성 가능한 중간물은 `.render-cache/`에 둔다. 첫 프리뷰 전에
+`render-source.json`으로 graph의 구현과 의존 파일을 선언한다.
+[run 소스 계약](video_harness/docs/run-render-sources.md)을 따른다. 새 주제를 위해
+공용 renderer·simulation 등록 분기나 공용 테스트를 추가하지 않는다. 일반 제작과
+수정·재렌더는 run 안에서 끝내며 제작 전후 Git 상태가 같아야 한다.
+`python -m video_harness render-source runs/<run>`으로 소스를 확인할 수 있다.
+
+새 schema-v7 실행의 `blender.shadow_pool_mb` 기본값은 2048MB(2GB)다.
+고급 설정에서 선택해 `run-settings.json`에 고정한다. 공통 실행기가 Blender Scene에
+적용하고 렌더 보고서에 실제값을 남긴다. 기존 v6 이하 스냅샷은 그대로 사용하며
+그림자 문제를 이유로 승인 없이 기존 실행 설정을 갱신하거나 재렌더하지 않는다.
+Shadow Pool 부족과 넓은 평면의 자기 그림자 오류는 따로 확인한다.
+
 ## 공통 연출 기준
 
 글자와 주요 객체의 기본 크기는 **2026-09-22 와도 영상에서 확대한 현재 크기**로

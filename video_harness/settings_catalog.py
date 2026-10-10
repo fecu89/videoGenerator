@@ -135,6 +135,8 @@ def _text(
 
 # The UI presents operator choices, not every implementation parameter.
 SETTINGS_CATALOG = (
+    _select("blender.shadow_pool_mb", "advanced", "Blender 그림자 메모리", "EEVEE Shadow Pool 용량입니다. 그림자 메모리 부족 시 늘립니다.",
+            *(_option(str(n), f"{n} MB") for n in (16, 32, 64, 128, 256, 512, 1024, 1536, 2048)), advanced=True),
     _select("voice.instructions_file", "basic", "목소리 톤", "영상 전체에 유지할 Sohee의 말투입니다.",
             _option("video_harness/agent/prompts/voice-sohee-ko-bright.txt", "밝고 생동감 있게"),
             _option("video_harness/agent/prompts/voice-sohee-ko.txt", "차분하고 신뢰감 있게"),

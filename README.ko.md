@@ -1,5 +1,9 @@
 # Video Generator
 
+새 영상 전용 코드·검증·테스트는 `runs/<run>/scripts/`, 자산은 `assets/`, 중간물은 `.render-cache/`에 둡니다. `render-source.json`에 의존 파일을 선언하여 일반 제작마다 공용 코드 수정이나 Git 커밋이 필요하지 않게 합니다. 새 설정 v7의 Blender EEVEE Shadow Pool 기본값은 2048MB이며 기존 run 설정은 유지합니다.
+
+[Run render sources](video_harness/docs/run-render-sources.md)
+
 [English](README.md) · **한국어** · [日本語](README.ja.md) · [简体中文](README.zh-CN.md) · [Español](README.es.md)
 
 주제 하나를 주면 AI 에이전트가 조사하고, 대본을 쓰고, 목소리를 입히고, 3D 화면까지 만들어 설명 영상 한 편을 완성하는 작업 폴더입니다.

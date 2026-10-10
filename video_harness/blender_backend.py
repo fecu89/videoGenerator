@@ -229,10 +229,12 @@ def main(argv=None) -> int:
                 raise ValueError('prepare requires a run directory')
             from .pipeline import load_pipeline_context, validate_pipeline_inputs
             from .settings import resolve_run_settings
-            from .sequence_render import _canonical_state_cache
+            from .sequence_render import backend_for_plan, build_sequence_job
+            from .pacing_presets import render_pacing_values
             from .simulation import load_simulation
             context=load_pipeline_context(args.run_directory)
-            issues=validate_pipeline_inputs(context,resolve_run_settings(args.run_directory))
+            settings = resolve_run_settings(args.run_directory)
+            issues=validate_pipeline_inputs(context,settings)
             if issues: raise ValueError(f'Invalid production inputs: {issues}')
             sequences=[s for s in context.local.sequences if (s.renderer or context.local.renderer)=='blender']
             if not sequences: raise ValueError('Plan does not select Blender')
@@ -240,16 +242,20 @@ def main(argv=None) -> int:
                 destination=args.run_directory/'blender'/f'{sequence.sequence_id}-editable.blend'
                 if destination.exists():raise FileExistsError(destination)
             simulation=load_simulation(context.run_dir,context.script)
+            backend=backend_for_plan(context.local,run_dir=context.run_dir,settings=settings)
             prepared=[]
             for sequence in sequences:
-                job=dict(sequence_id=sequence.sequence_id,scene_graph=sequence.scene_graph,
-                    frame_count=sequence.duration_frames,duration_frames=sequence.duration_frames,
-                    canonical_fps=context.local.defaults.fps,
-                    output=dict(width=context.local.defaults.width,height=context.local.defaults.height,fps=context.local.defaults.fps),
-                    timeline=[beat.model_dump(mode='json') for beat in sequence.timeline],
-                    canonical_state_cache=_canonical_state_cache(sequence),style=simulation.style.model_dump(mode='json'))
+                job=build_sequence_job(sequence,width=context.local.defaults.width,height=context.local.defaults.height,
+                    output_fps=context.local.defaults.fps,canonical_fps=context.local.defaults.fps,
+                    cache_dir=context.run_dir/'.render-cache/mcp',simulation=simulation,
+                    camera_transition_seconds=settings.local_video.camera_transition_seconds,
+                    pacing=render_pacing_values(settings))
                 destination=args.run_directory/'blender'/f'{sequence.sequence_id}-editable.blend'
-                prepared.append(client.prepare_scene(job,destination))
+                chosen=backend.backend_for_sequence(sequence.sequence_id) if hasattr(backend,'backend_for_sequence') else backend
+                if hasattr(chosen,'prepare_scene'):
+                    prepared.append(chosen.prepare_scene(job,destination,client))
+                else:
+                    prepared.append(client.prepare_scene(job,destination))
             result=prepared[0] if len(prepared)==1 else {'sequences':prepared,'rendered':False}
         print(json.dumps(result, ensure_ascii=False, indent=2))
     except (OSError, ValueError, RuntimeError) as error:

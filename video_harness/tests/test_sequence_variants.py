@@ -122,6 +122,18 @@ def _assemble(
     return manifest, qa_calls
 
 
+def test_variants_receive_same_run_pacing_as_base(v2_run, fake_sequence_backend, monkeypatch):
+    from video_harness.settings import write_settings_snapshot
+    from video_harness.pacing_presets import apply_pacing_preset, render_pacing_values
+    settings = apply_pacing_preset(HarnessSettings(), 'standard')
+    write_settings_snapshot(v2_run, settings)
+    _assemble(v2_run, fake_sequence_backend, monkeypatch)
+    assert fake_sequence_backend.jobs
+    for job in fake_sequence_backend.jobs:
+        assert job['camera_transition_seconds'] == .5
+        assert job['pacing'] == render_pacing_values(settings)
+
+
 def test_background_music_is_applied_to_master_and_every_variant(v2_run, fake_sequence_backend, monkeypatch):
     calls = []
     monkeypatch.setattr('video_harness.music.score_master',

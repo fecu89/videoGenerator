@@ -1,5 +1,12 @@
 # Video Generator Agent Harness
 
+새 영상의 코드·검증·전용 테스트는 `runs/<run>/scripts/`에, 자산은 `assets/`에 둔다.
+첫 프리뷰 전에 `render-source.json`을 작성한다. [run 소스 계약](../docs/run-render-sources.md)을
+따르고 새 주제 때문에 공용 등록 분기나 공용 테스트를 추가하지 않는다. 렌더 중간물은
+`.render-cache/`에 두어 영상 제작·수정·재렌더 전후 Git 상태가 같게 유지한다.
+새 v7 실행의 Blender Shadow Pool 기본값은 2048MB이며 실행 설정과 보고서에 기록한다.
+
+
 이 폴더의 작업은 Codex가 편집 판단과 샷 설계를 맡고 Python이 검증, 음성 생성,
 샷 컴파일, 결정론적 렌더와 합본을 수행하는 제작 흐름이다. 새 실행의 전체
 대본은 항상 사람이 피드백하고 명시적으로 승인해야 한다. 음성 뒤에 만든
@@ -200,7 +207,7 @@ python -m video_harness voice runs/<run>/script.json --scenes 2,5,7 --force
 완료한다. 씬은 모델을 한 번 로드한 프로세스에서 번호순으로 합성하며 에이전트나
 Python 스레드 풀에 나누지 않는다. schema-v1 원격 TTS와 schema-v2 Apple TTS
 설정 실행은 기존 MP3 검증·렌더만 허용하고, 재합성 전에
-`settings <run> --refresh-settings`로 현재 schema-v6를 명시적으로 채택한다. schema-v3 Qwen 실행은 기존 스냅샷으로 재합성할 수 있다.
+`settings <run> --refresh-settings`로 현재 schema-v7를 명시적으로 채택한다. schema-v3 Qwen 실행은 기존 스냅샷으로 재합성할 수 있다.
 
 ## 6. 길이 보정
 
@@ -352,7 +359,7 @@ python -m video_harness produce runs/<run> --quality draft
 
 `produce`와 `produce-local`의 기본 품질은 `draft`다. 저해상도 초본 QA가
 통과하면 `final-draft.mp4`의 재생 링크를 대화에 먼저 제공한다. 장면별 초본은
-`videoFiles/draft/`에 있다. schema-v6는 `runtime_defaults.py`의 긴 변 384px·9fps를
+`videoFiles/draft/`에 있다. schema-v6 이상은 `runtime_defaults.py`의 긴 변 384px·9fps를
 사용하며 화면 비율을 따른다. 이전 schema는 `run-settings.json`의 `render.draft_*`를
 유지한다. 초본용으로 설정 스냅샷을 다시 쓰지 않는다. 사용자가 초본을 요청한
 경우 초본을 전달하고 피드백을 받는다. 고해상도 제작 요청이 있으면 다음을
@@ -382,7 +389,7 @@ python -m video_harness produce runs/<run> --quality final
 
 비디오를 만드는 mode에서는 `produce`가 초안 렌더와 QA를 먼저 거친다.
 `draft` 실행은 이 단계에서 종료하고 초본 경로를 출력한다. QA는
-schema-v6의 고정 0.5초 간격·8열(이전 schema는 effective settings의
+schema-v6 이상의 고정 0.5초 간격·8열(이전 schema는 effective settings의
 `render.preview_interval_seconds`·contact-sheet 열 수)과 QA 허용 오차로 프레임 수, 오디오 끝 무음, 상태 지문,
 레이어 연속성, 시뮬레이션 시간과 선언되지 않은 정지를 검사한다. 초안 QA가
 통과하지 않으면 최종 렌더를 시작하지 않는다. 캐시를 무시하려면 `--force`를

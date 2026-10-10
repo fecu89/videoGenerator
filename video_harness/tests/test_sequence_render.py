@@ -34,6 +34,25 @@ def _read_fake_media(path: Path) -> MediaInfo:
     return MediaInfo(**json.loads(path.read_text(encoding="utf-8")))
 
 
+def test_alternate_simulation_filename_is_used_for_render_and_cache(v2_run, fake_sequence_backend):
+    path = v2_run/'local-sequence-plan.json'
+    plan = json.loads(path.read_text())
+    plan['simulation_config_file'] = 'scripts/sim.json'
+    (v2_run/'scripts').mkdir()
+    (v2_run/'simulation.json').rename(v2_run/'scripts/sim.json')
+    path.write_text(json.dumps(plan))
+    report = render_sequence_quality(v2_run,quality='final',backend=fake_sequence_backend)
+    assert report.sequences
+    before = len(fake_sequence_backend.jobs)
+    render_sequence_quality(v2_run,quality='final',backend=fake_sequence_backend)
+    assert len(fake_sequence_backend.jobs) == before
+    simulation = json.loads((v2_run/'scripts/sim.json').read_text())
+    simulation['style']['seed'] += 1
+    (v2_run/'scripts/sim.json').write_text(json.dumps(simulation))
+    render_sequence_quality(v2_run,quality='final',backend=fake_sequence_backend)
+    assert len(fake_sequence_backend.jobs) > before
+
+
 @pytest.fixture
 def v2_run(tmp_path: Path) -> Path:
     run_dir = tmp_path / "run"

@@ -103,7 +103,7 @@ def render_preview(run_dir: Path, *, settings: HarnessSettings | None = None, ba
     local = load_local_sequence_plan(run / 'local-sequence-plan.json')
     continuity = json.loads((run / 'continuity-plan.json').read_text(encoding='utf-8'))
     simulation = load_simulation(run, store.read_script())
-    active = backend or backend_for_plan(local)
+    active = backend or backend_for_plan(local, run_dir=run, settings=settings)
     active.check_dependencies()
     width, height, fps = settings.render.draft_width, settings.render.draft_height, settings.render.draft_fps
     boundaries = transition_boundaries(local, continuity)
@@ -131,7 +131,11 @@ def render_preview(run_dir: Path, *, settings: HarnessSettings | None = None, ba
             copied.append(target)
             all_frames.append(target)
         _contact_sheet(copied, out_root / f'{sequence.sequence_id}-contact-sheet.png')
-        versions[sequence.sequence_id] = _backend_version_for(active, sequence)
+        current_version = _backend_version_for(active, sequence)
+        rendered_version = report.get('renderer_version', current_version)
+        if rendered_version != current_version:
+            raise ValueError('Render source changed before preview publication; regenerate the preview')
+        versions[sequence.sequence_id] = rendered_version
         sequences.append(PreviewSequence(sequence_id=sequence.sequence_id, sample_frames=sample,
             roles=frame_roles(sequence, boundaries[sequence.sequence_id], canonical_fps=local.defaults.fps, output_fps=fps),
             frames=[str(p.relative_to(run)) for p in copied], state_samples=report['state_samples']))

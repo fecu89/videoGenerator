@@ -38,7 +38,9 @@ MP4는 음성 결합·음악 처리 후 제거하며 추가 언어 본편 영상
 |---|---|---|
 | 계획·검사·실행 | `pipeline.py`, `produce_local.py`, `sequence_*.py`, `creative_gates.py` | 승인, 렌더 선택, 캐시, QA, 최종본 게시 |
 | Blender 연결 | `blender_backend.py` | localhost:9876 MCP와 네이티브 Blender 실행 |
-| Blender 장면 | `blender_renderer/*.py` | Blender 내부 `bpy`로 객체·재질·카메라·키프레임 구성 |
+| 새 영상 장면·검증 | `runs/<run>/scripts/` | 영상별 Blender/Three.js 코드·계산·schema·전용 테스트 |
+| run 실행기 | `render_sources.py`, `run_*_backend.py`, `render_runtime/` | 소스 격리·스냅샷·설정 적용·캐시·보고서 |
+| 기존 Blender 장면 | `blender_renderer/*.py` | 기존 실행 호환; 새 주제 코드는 추가하지 않음 |
 | Three.js 장면 | `science_renderer/src/` | 브라우저의 WebGL로 3D 렌더 |
 | 물리 계산 | `*_math.py`, `spectra.py`, `simulation.py` 등 | 좌표·스펙트럼 계산, 입력 계약·사실성 검증 |
 | 음성 | `voice.py`, `mlx_voice.py`, `voice_audio.py` | 엔진별 합성과 공통 음성 처리 |
@@ -200,3 +202,13 @@ python -m video_harness deliver runs/<run>
 첫 명령은 전달 계획 확인, 두 번째는 개인 모듈 인증, 세 번째는 완성 산출물의 전달
 재시도다. 제공자별 설명은 로컬 모듈의 README를 따른다. 개인 모듈을 Git에 올리지
 않으면 다른 컴퓨터로 복제할 때 별도로 옮겨야 한다.
+
+## 영상별 소스와 설정 v7
+
+[run 소스 계약](run-render-sources.md)에 따라 영상별 작업은 Git 제외 `runs/<run>/`에
+완결한다. 원본은 scripts·assets, 중간물은 `.render-cache/`다. 소스·자산의 실제 바이트와
+설정을 현재 run의 승인·캐시 해시에 연결한다. 프리뷰·본편·대안·MCP는 같은 resolver를 쓴다.
+
+새 v7의 `blender.shadow_pool_mb` 기본값은 2048MB다. `ArchivedV6HarnessSettings`는
+v6 이하 실행에 blender 필드를 추가하지 않아 기존 설정 해시를 유지한다. v7에서
+내장 장면을 재사용해도 새 worker가 저장·렌더 전에 Scene 설정을 적용한다.

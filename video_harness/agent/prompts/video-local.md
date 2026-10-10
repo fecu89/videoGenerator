@@ -29,13 +29,13 @@
 
 ## 시퀀스와 타임라인
 
-각 로컬 sequence에 `sequence_id`, `scene_ids`, `duration_frames`, `render_mode: simulation`, 등록된 `scene_graph`, 완전한 `scene_spans`, 완전한 `timeline`을 쓴다. 타임라인 합집합은 프레임 빈틈 없이 전체 시퀀스를 덮는다.
+각 로컬 sequence에 `sequence_id`, `scene_ids`, `duration_frames`, `render_mode: simulation`, `render-source.json`에 선언한 `scene_graph`(기존 실행은 등록된 graph), 완전한 `scene_spans`, 완전한 `timeline`을 쓴다. 타임라인 합집합은 프레임 빈틈 없이 전체 시퀀스를 덮는다.
 
 각 timeline beat는 공통 계획의 동일한 `beat_id`, `start_frame`, `end_frame`을 사용하고 다음 실행 필드를 선언한다.
 beat 길이와 카메라 전환은 `DIRECTION.md` §4-1과 유효 실행 설정의 `local_video.target_beat_min_seconds`·`target_beat_max_seconds`·`camera_transition_seconds`를 따른다. 선택한 템포에 맞춰 새 계획을 만들고 구도 사이는 연속 이동한다. 긴 물리 과정의 예외 이유는 비트의 `controller_options.pacing_exception_reason`에 기록하고 `plan-video` 검토본에서 확인한다.
 
 - `simulation_time_start`, `simulation_time_end`
-- 등록된 `controller`
+- run 구현이 처리하는 `controller`(기존 실행은 등록된 controller)
 - `patch_targets`: `simulation_clock`, `geometry`, `layers`, `entities`, `camera`, `hide_events` 가운데 실제 쓰기 대상
 - 동시 쓰기 충돌을 결정하는 `priority`
 - 필요한 `controller_options`
@@ -98,3 +98,7 @@ beat 길이와 카메라 전환은 `DIRECTION.md` §4-1과 유효 실행 설정�
 - 식현상 컨트롤러의 wide→close 비트가 같은 씬에서 빈틈없이 순서대로 이어진다.
 - scene graph와 controller 이름은 로컬 레지스트리에 실제로 존재하는 이름만 사용한다.
 - 씬 경계에서도 geometry, entities, camera와 누적 layers의 상태가 이어진다.
+
+새 주제는 [run 소스 계약](../../docs/run-render-sources.md)에 따라 `runs/<run>/scripts/`에
+장면·계산·validator·전용 테스트를 작성한다. `simulation.json`의 `preset: run-scene`과
+run 소유 JSON Schema를 사용하고 공용 등록 파일에는 주제 분기를 추가하지 않는다.

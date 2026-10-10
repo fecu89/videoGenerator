@@ -91,9 +91,9 @@ def test_real_encoder_keeps_pause_lengths_after_speedup(tmp_path):
 
 
 def test_legacy_snapshot_hash_is_unchanged_and_typed_mode_changes_it():
-    from video_harness.settings import HarnessSettings, settings_sha256
-    assert settings_sha256(HarnessSettings()) == '1a83ee8dc1f349f8ab1896a10544c3899267397a7e12bd5a2bb6c5ad49753dfc'
-    assert settings_sha256(HarnessSettings(voice={'pause_mode':'typed'})) != settings_sha256(HarnessSettings())
+    from video_harness.settings import ArchivedV6HarnessSettings, settings_sha256
+    assert settings_sha256(ArchivedV6HarnessSettings()) == '1a83ee8dc1f349f8ab1896a10544c3899267397a7e12bd5a2bb6c5ad49753dfc'
+    assert settings_sha256(ArchivedV6HarnessSettings(voice={'pause_mode':'typed'})) != settings_sha256(ArchivedV6HarnessSettings())
 
 
 def test_qwen_uses_typed_phrases_without_speaking_annotations(tmp_path):

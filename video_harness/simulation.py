@@ -283,7 +283,19 @@ class GeomagneticSimulationConfig(StrictModel):
     scenes: list[SpectralScene] = Field(min_length=1)
 
 
+class RunSceneSimulationConfig(StrictModel):
+    schema_version: Literal[1]
+    preset: Literal['run-scene']
+    output: OutputSettings
+    physics: dict[str, object]
+    style: dict[str, object]
+    scenes: list[SpectralScene] = Field(min_length=1)
+
+
 def _validate_schema(payload: object) -> None:
+    if isinstance(payload, dict) and payload.get('preset') == 'run-scene':
+        RunSceneSimulationConfig.model_validate(payload)
+        return
     if isinstance(payload, dict) and payload.get('preset') == 'geomagnetic-dynamo-blender':
         GeomagneticSimulationConfig.model_validate(payload)
         return
@@ -342,14 +354,19 @@ def _validate_schema(payload: object) -> None:
 
 
 def load_simulation(run_dir: Path, script: ScriptArtifact) -> SimulationConfig | BlenderSimulationConfig | EclipseSimulationConfig | VorticitySimulationConfig:
-    path = run_dir.resolve() / "simulation.json"
+    from .render_sources import simulation_input_path
+    path = simulation_input_path(run_dir)
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as error:
         raise ValueError(f"simulation.json을 읽을 수 없습니다: {error}") from error
 
     _validate_schema(payload)
-    if payload.get('preset') == 'geomagnetic-dynamo-blender':
+    if payload.get('preset') == 'run-scene':
+        from .render_sources import validate_source_simulation
+        validate_source_simulation(run_dir, payload)
+        config = RunSceneSimulationConfig.model_validate(payload)
+    elif payload.get('preset') == 'geomagnetic-dynamo-blender':
         config = GeomagneticSimulationConfig.model_validate(payload)
     elif payload.get('preset') == 'energy-transport-blender':
         config = EnergyTransportSimulationConfig.model_validate(payload)

@@ -100,6 +100,8 @@ def load_pipeline_context(run_dir: Path) -> PipelineContext:
 def validate_pipeline_inputs(context: PipelineContext, settings: HarnessSettings) -> list[str]:
     """Validate authored input media without requiring any published output."""
     issues: list[str] = []
+    from .render_sources import run_plan_source_issues
+    issues.extend(run_plan_source_issues(context.run_dir, context.local))
     for scene in context.script.scenes:
         audio_relative = scene.audio_file or f"audioFiles/{scene_filename(scene, '.mp3')}"
         audio_path = context.run_dir / audio_relative

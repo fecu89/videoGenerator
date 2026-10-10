@@ -1,5 +1,9 @@
 # Video Generator
 
+视频专用代码、校验和测试放在 `runs/<run>/scripts/`，素材放在 `assets/`，中间产物放在 `.render-cache/`。在 `render-source.json` 中声明依赖，日常制作无需修改公共代码或提交 Git。新设置 v7 的 Blender EEVEE Shadow Pool 默认为 2048 MB，现有 run 设置保持不变。
+
+[Run render sources](video_harness/docs/run-render-sources.md)
+
 [English](README.md) · [한국어](README.ko.md) · [日本語](README.ja.md) · **简体中文** · [Español](README.es.md)
 
 给出一个主题,AI 智能体就会查资料、写脚本、配音,并做出 3D 画面,完成一部讲解视频。这个文件夹就是为此准备的工作目录。

@@ -385,7 +385,7 @@ def generate_audio(
         settings = HarnessSettings()
     if getattr(settings.voice, "engine", None) == "voxcpm2":
         raise RuntimeError("VoxCPM2 has been removed; explicitly refresh this run with Qwen settings before regenerating voice")
-    if settings.schema_version not in (4, 5, 6) and not (settings.schema_version == 3 and settings.voice.engine == "qwen3"):
+    if settings.schema_version not in (4, 5, 6, 7) and not (settings.schema_version == 3 and settings.voice.engine == "qwen3"):
         raise RuntimeError(
             f"schema-v{settings.schema_version} run settings cannot regenerate local voice; run "
             f"python -m video_harness settings {script_path.parent} --refresh-settings"
@@ -547,7 +547,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         base_settings = resolve_run_settings(args.script.parent, refresh=args.refresh_settings)
         if getattr(base_settings.voice, "engine", None) == "voxcpm2":
             raise RuntimeError("VoxCPM2 has been removed; use --refresh-settings with Qwen project settings")
-        if base_settings.schema_version not in (4, 5, 6) and not (base_settings.schema_version == 3 and (args.engine or base_settings.voice.engine) == "qwen3"):
+        if base_settings.schema_version not in (4, 5, 6, 7) and not (base_settings.schema_version == 3 and (args.engine or base_settings.voice.engine) == "qwen3"):
             raise RuntimeError(
                 f"schema-v{base_settings.schema_version} run settings cannot regenerate local voice; run "
                 f"python -m video_harness settings {args.script.parent} --refresh-settings"

@@ -371,9 +371,9 @@ def test_refresh_explicitly_replaces_historical_snapshot_with_schema_v3(
         persist=True,
     )
 
-    assert refreshed.schema_version == 6
+    assert refreshed.schema_version == 7
     assert refreshed.voice.temperature == 0.6
-    assert json.loads(snapshot.read_text(encoding="utf-8"))["schema_version"] == 6
+    assert json.loads(snapshot.read_text(encoding="utf-8"))["schema_version"] == 7
 
 
 def test_run_settings_schema_matches_model_regeneration(tmp_path: Path):

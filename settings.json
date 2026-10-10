@@ -1,5 +1,5 @@
 {
-  "schema_version": 6,
+  "schema_version": 7,
   "pacing": {
     "preset": "shorts",
     "version": 1
@@ -76,5 +76,8 @@
   "promotion": {
     "base_url": "",
     "locale_mode": "shared"
+  },
+  "blender": {
+    "shadow_pool_mb": 2048
   }
 }

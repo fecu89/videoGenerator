@@ -106,6 +106,9 @@ class SequenceStateReport(StrictModel):
     capture_transport_bytes: int | None = Field(default=None, ge=0)
     backend: RendererBackend | None = None
     timings: RendererTimings | None = None
+    renderer_version: str | None = None
+    render_source_sha256: str | None = None
+    blender_settings: dict[str, int] | None = None
 
 
 @dataclass(frozen=True)

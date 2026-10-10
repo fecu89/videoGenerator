@@ -26,7 +26,7 @@ from .sequence_models import LocalSequence, LocalSequencePlan, OnlinePlan, Seque
 from .sequence_plans import load_local_sequence_plan, load_online_plan
 from .simulation import SimulationConfig, load_simulation
 from .storage import RunStore, atomic_write, fingerprint, scene_filename
-from .settings import HarnessSettings
+from .settings import HarnessSettings, resolve_run_settings
 from .pacing_presets import render_pacing_values
 from .sequence_transitions import apply_entry_transitions
 
@@ -206,9 +206,37 @@ def _make_backend(renderer: str) -> SequenceRenderBackend:
 
 class RoutedSequenceRenderBackend:
     """Keep independent sequence renders on their explicitly selected engine."""
-    def __init__(self, local: LocalSequencePlan):
+    def __init__(self, local: LocalSequencePlan, *, run_dir=None, settings=None):
         self.routes={s.sequence_id:sequence_renderer(local,s) for s in local.sequences}
         self.backends={name:_make_backend(name) for name in set(self.routes.values())}
+        self.run_scoped = False
+        if run_dir is not None:
+            from .render_sources import resolve_render_source, run_source_policy_issues
+            from .run_blender_backend import RunBlenderSequenceRenderBackend, ConfiguredBlenderSequenceRenderBackend
+            from .settings import resolve_run_settings
+            resolved_settings = settings or resolve_run_settings(Path(run_dir))
+            for sequence in local.sequences:
+                engine = sequence_renderer(local, sequence)
+                source = resolve_render_source(Path(run_dir), sequence.scene_graph, engine=engine)
+                chosen = None
+                if source is not None:
+                    issues = run_source_policy_issues(source)
+                    if issues:
+                        raise ValueError('; '.join(issues))
+                    if engine == 'blender':
+                        chosen = RunBlenderSequenceRenderBackend(source, settings=resolved_settings)
+                    else:
+                        from .run_threejs_backend import RunThreeJSSequenceRenderBackend
+                        chosen = RunThreeJSSequenceRenderBackend(source)
+                    self.run_scoped = True
+                elif engine == 'blender' and hasattr(resolved_settings, 'blender'):
+                    chosen = ConfiguredBlenderSequenceRenderBackend(settings=resolved_settings, run_dir=run_dir)
+                    self.run_scoped = True
+                if chosen is not None:
+                    key = 'sequence:' + sequence.sequence_id
+                    self.routes[sequence.sequence_id] = key
+                    self.backends[key] = chosen
+            self.backends = {key: value for key, value in self.backends.items() if key in self.routes.values()}
 
     def backend_for_sequence(self, sequence_id: str) -> SequenceRenderBackend:
         if sequence_id not in self.routes:
@@ -227,7 +255,11 @@ class RoutedSequenceRenderBackend:
         return self.backend_for_sequence(str(job['sequence_id'])).render_frames(job,cache_dir)
 
 
-def backend_for_plan(local: LocalSequencePlan) -> SequenceRenderBackend:
+def backend_for_plan(local: LocalSequencePlan, *, run_dir: Path | None = None, settings=None) -> SequenceRenderBackend:
+    if run_dir is not None:
+        routed = RoutedSequenceRenderBackend(local, run_dir=run_dir, settings=settings)
+        if routed.run_scoped:
+            return routed
     if any(getattr(s,'renderer',None) is not None for s in local.sequences):
         return RoutedSequenceRenderBackend(local)
     return _make_backend(local.renderer)
@@ -386,6 +418,8 @@ def _write_render_record(
 
 
 def _physics_payload(config: SimulationConfig) -> dict[str, object]:
+    if config.preset == 'run-scene':
+        return dict(config.physics)
     if config.preset in {"stellar-spectra-blender", "sun-earth-moon-blender", "vorticity-blender", "bonding-blender", "coriolis-blender", "phantom-jam-blender", "optical-depth-blender", "transfer-equation-blender", "virial-galaxy-blender", "adiabatic-blender", "saturn-rings-blender", "typhoon-beta-blender", "energy-transport-blender", "geomagnetic-dynamo-blender"}:
         return config.physics.model_dump(mode="json")
     return {
@@ -398,6 +432,8 @@ def _physics_payload(config: SimulationConfig) -> dict[str, object]:
 
 
 def _style_payload(config: SimulationConfig) -> dict[str, object]:
+    if config.preset == 'run-scene':
+        return dict(config.style)
     if config.preset in {"stellar-spectra-blender", "sun-earth-moon-blender", "vorticity-blender", "bonding-blender", "coriolis-blender", "phantom-jam-blender", "optical-depth-blender", "transfer-equation-blender", "virial-galaxy-blender", "adiabatic-blender", "saturn-rings-blender", "typhoon-beta-blender", "energy-transport-blender", "geomagnetic-dynamo-blender"}:
         return config.style.model_dump(mode="json")
     return {
@@ -609,7 +645,11 @@ def render_sequence_quality(
     from .creative_gates import require_creative_plan
     require_creative_plan(run_dir)
     store = RunStore.open(run_dir)
-    settings = settings or HarnessSettings()
+    settings = settings or (
+        resolve_run_settings(store.root)
+        if (store.root / 'run-settings.json').is_file()
+        else HarnessSettings()
+    )
     encoder = EncoderSpec(
         preset=settings.render.x264_preset,
         crf=settings.render.x264_crf,
@@ -620,7 +660,8 @@ def render_sequence_quality(
     production_path = store.root / "production-plan.json"
     local_path = store.root / "local-sequence-plan.json"
     online_path = store.root / "online-plan.json"
-    simulation_path = store.root / "simulation.json"
+    from .render_sources import simulation_input_path
+    simulation_path = simulation_input_path(store.root)
     production = load_production_plan(production_path)
     local = load_local_sequence_plan(local_path)
     load_online_plan(online_path)
@@ -649,8 +690,9 @@ def render_sequence_quality(
             if not audio_path.is_file() or audio_path.stat().st_size == 0:
                 raise FileNotFoundError(audio_path)
 
-    active_backend = backend or backend_for_plan(local)
+    active_backend = backend or backend_for_plan(local, run_dir=run_dir, settings=settings)
     active_backend.check_dependencies()
+    input_version = _backend_version(active_backend) if getattr(active_backend, 'run_scoped', False) else None
     production_sha = script_sha256(production_path)
     local_sha = script_sha256(local_path)
     simulation_sha = script_sha256(simulation_path)
@@ -677,6 +719,13 @@ def render_sequence_quality(
     reused_sequence_ids: list[str] = []
     for sequence in local.sequences:
         record_path = sequence_directory / f"{sequence.sequence_id}-render-record.json"
+        if getattr(active_backend, 'run_scoped', False):
+            sequence_backend_version = _backend_version(active_backend.backend_for_sequence(sequence.sequence_id))
+            render_fingerprint = _render_fingerprint(
+                local_plan_sha256=local_sha, simulation_sha256=simulation_sha, quality=quality,
+                variant_profile=variant_profile,
+                backend_version=sequence_backend_version,
+                render_settings=settings)
         reusable = None if force else _load_reusable_result(
             record_path,
             expected_fingerprint=render_fingerprint,
@@ -726,6 +775,10 @@ def render_sequence_quality(
             else nullcontext()
         ):
             raw_state_report = active_backend.render_frames(job, cache_dir)
+        if getattr(active_backend, 'run_scoped', False):
+            attested = json.loads(Path(raw_state_report).read_text()).get('renderer_version')
+            if attested is not None and attested != sequence_backend_version:
+                raise ValueError('Render input version differs from the sequence cache fingerprint')
         previous_frame = None
         has_entry = any(b.controller_options.get('entry_transition') for b in sequence.timeline)
         if has_entry and sequence_results:
@@ -901,6 +954,8 @@ def render_sequence_quality(
         store.root, local, sequence_results, final_original_path, final_path,
         encoder=encoder, settings=settings,
     )
+    if input_version is not None and input_version != _backend_version(active_backend):
+        raise ValueError('Render inputs changed during encoding; regenerate and review the preview')
 
     report = SequenceRenderReport(
         quality=quality,

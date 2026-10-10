@@ -197,6 +197,10 @@ def require_creative_plan(run):
     try:errors=check_continuity_plan(read_json(run/'local-sequence-plan.json'),read_json(run/'continuity-plan.json'),digest(run/'local-sequence-plan.json'))
     except (OSError,ValueError,KeyError,TypeError) as e:errors=[f'continuity_plan_missing_or_invalid: {e}']
     _gate(run,'continuity-plan',errors)
+    from .render_sources import run_plan_source_issues
+    issues = run_plan_source_issues(run)
+    if issues:
+        raise ValueError('; '.join(issues))
 
 
 def text_policy_of(run):

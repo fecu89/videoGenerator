@@ -834,6 +834,8 @@ def produce_local(
             require_text_render(context.run_dir, context.run_dir, "draft")
             _localize_stage(context, draft, quality="draft", root=context.run_dir, settings=settings,
                             fps=settings.render.draft_fps, width=settings.render.draft_width, height=settings.render.draft_height)
+        require_current_video_plan_approval(context.run_dir)
+        require_stage_approval(context.run_dir, 'draft')
         return write_local_production_report(context, draft, draft_qa)
 
     with final_staging_directory(context.run_dir) as staging:

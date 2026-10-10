@@ -28,6 +28,7 @@ class GeomagneticGallery(SpectralGallery):
         self.scene.eevee.taa_render_samples=16
         self.scene.world.use_nodes=True
         bg=self.scene.world.node_tree.nodes['Background']
+        self.background=bg
         bg.inputs['Color'].default_value=(.075,.12,.19,1)
         bg.inputs['Strength'].default_value=.48
         self.camera.data.clip_end=150
@@ -207,9 +208,10 @@ class GeomagneticGallery(SpectralGallery):
                 o=self.ball(f'CurrentPulse{i}_{j}',.043,gold);fade(o,'current')
                 self.charges.append((o,radius,z,j/4))
         self.field=[];self.field_dots=[]
-        for side in range(8):
-            azimuth=side*math.tau/8
-            for n,L in enumerate((3.9,5.05,6.2)):
+        # Four paths on each side of one meridional plane. A ring of azimuths
+        # overlapped in projection and obscured the intended shape comparison.
+        for side,azimuth in enumerate((0,math.pi)):
+            for n,L in enumerate((3.8,4.6,5.4,6.2)):
                 pts=field_path(L,azimuth)
                 o=self.curve(f'FieldLine{side}_{n}',pts,.011,blue);fade(o,'field');self.field.append(o)
                 o.shape_key_add(name='Dipole')
@@ -219,15 +221,14 @@ class GeomagneticGallery(SpectralGallery):
                 o=self.arrow(f'FieldDirection{side}_{n}',white,.16);fade(o,'field')
                 self.field_dots.append((o,pts,(side*.12+n*.19)%1,True))
         self.magnet_fields=[];self.magnet_dots=[]
-        for side in range(8):
-            azimuth=side*math.tau/8
-            for n,L in enumerate((3.9,5.05,6.2)):
+        for side,azimuth in enumerate((0,math.pi)):
+            for n,L in enumerate((3.8,4.6,5.4,6.2)):
                 pts=field_path(L,azimuth)
                 o=self.curve(f'EarthComparisonField{side}_{n}',pts,.011,blue);fade(o,'compare')
                 o=self.arrow(f'EarthComparisonDirection{side}_{n}',white,.14);fade(o,'compare')
                 self.field_dots.append((o,pts,side*.15+n*.20,False))
         for side,azimuth in enumerate((0,math.pi)):
-            for n,L in enumerate((1.65,2.1,2.6)):
+            for n,L in enumerate((1.6,1.95,2.3,2.65)):
                 pts=bar_field_path(L,azimuth)
                 o=self.curve(f'MagnetField{side}_{n}',pts,.014,blue);fade(o,'compare');self.magnet_fields.append(o)
                 o=self.arrow(f'MagnetFieldDirection{side}_{n}',white,.14);fade(o,'compare');self.magnet_dots.append((o,pts,side*.15+n*.20))
@@ -259,7 +260,8 @@ class GeomagneticGallery(SpectralGallery):
                 base=shader.inputs['Base Color']
                 if base.is_linked:material.node_tree.links.new(base.links[0].from_socket,shader.inputs['Emission Color'])
                 shader.inputs['Emission Strength'].default_value=1.1
-        fade(self.sun,'sun');self.sun.location=(-12,2,0)
+        fade(self.sun,'sun');self.sun.location=(-19,38,-3)
+        self.sun.scale=(.14,)*3
         self.wind=[]
         for lane in range(6):
             for j in range(3):
@@ -286,6 +288,8 @@ class GeomagneticGallery(SpectralGallery):
 
     def sample(self,frame):
         st=self.story.state(frame);cut=st['cutaway'];t=st['time']
+        space=st['sun']
+        self.background.inputs['Color'].default_value=tuple(a+(b-a)*space for a,b in zip((.075,.12,.19,1),(.001,.002,.006,1)))
         compare=st['compare'];hypothesis=st['hypothesis']
         show_cut=cut*(1-compare);surface=st['full_surface']*(1-compare)
         outer_view=max(0.,min(1.,(st['camera'][2]-9.)/4.))
@@ -299,12 +303,13 @@ class GeomagneticGallery(SpectralGallery):
         self.compass.rotation_euler.y=st['body_turn']
         self.needle.rotation_euler.y=st['needle_angle']-st['body_turn']+.10
         self.compass.location=(0,-2.5,0);self.compass.scale=(.8,)*3
-        self.earth_rig.location=(-3.7*compare,0,0)
-        self.earth_rig.scale=(1.-.30*compare,)*3
+        wire=st['wire_stage']
+        self.earth_rig.location=(-3.7*compare-3.6*wire,0,0)
+        self.earth_rig.scale=(1.-.30*compare-.20*wire,)*3
         self.magnet.location=(3.8*compare,-.9*(1-compare),0)
         self.magnet.scale=(.8,)*3
         for o in self.magnet_fields:o.location=(3.8,0,0)
-        self.wire_root.location=(8.5,-.6,0);self.wire_root.scale=(1.35,)*3
+        self.wire_root.location=(3.7,-.6,0);self.wire_root.scale=(2.1,)*3
         explode=st['explode']
         self.outer_core.location=(1.8*explode,-.1*explode,0)
         self.inner_core.location=(-1.8*explode,-.3*explode,0)
@@ -367,7 +372,8 @@ class GeomagneticGallery(SpectralGallery):
         for obj in self.animated:
             for prop in ('location','rotation_euler','scale'):obj.keyframe_insert(data_path=prop,frame=1)
         self.camera.data.keyframe_insert(data_path='ortho_scale',frame=1)
-        owners=[*self.animated,self.camera.data]
+        self.background.inputs['Color'].keyframe_insert(data_path='default_value',frame=1)
+        owners=[*self.animated,self.camera.data,self.scene.world.node_tree]
         for key in self.field_shapes:
             key.keyframe_insert(data_path='value',frame=1);owners.append(key.id_data)
         for obj in self.tracked:

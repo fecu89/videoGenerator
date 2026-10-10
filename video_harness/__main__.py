@@ -14,6 +14,7 @@ def _command(module_name: str, function_name: str) -> Callable[[Sequence[str] | 
 
 
 COMMANDS: dict[str, Callable[[Sequence[str] | None], int]] = {
+    "render-source": _command("render_sources", "main"),
     "check-creative": _command("creative_gates", "main"),
     "blender": _command("blender_backend", "main"),
     "voice": _command("voice", "main"),

@@ -41,7 +41,7 @@ def pacing_payload():
 
 
 def apply_pacing_preset(settings: HarnessSettings, preset_id: str) -> HarnessSettings:
-    if settings.schema_version != 6:
+    if settings.schema_version != 7:
         raise ValueError('Apply presets to project settings; existing runs require explicit refresh.')
     preset = next((item for item in PACING_PRESETS if item['id'] == preset_id), None)
     if preset is None:

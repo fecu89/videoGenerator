@@ -108,29 +108,29 @@ class Story:
             (self.at(11,.60),(0.,-.3,0.),6.8),
             (self.at(12,.35),(0.,0.,0.),12.),
             (self.at(12,.95),(0.,0.,0.),12.),
-            (self.at(13,.30),(1.7,0.,0.),21.),
-            (self.at(14,.90),(1.7,0.,0.),21.),
+            (self.at(13,.30),(-1.65,0.,0.),15.5),
+            (self.at(14,.90),(-1.65,0.,0.),15.5),
             (self.at(15,.65),(0.,-.3,0.),6.8),
             (self.at(16,.85),(0.,0.,0.),14.),
-            (self.at(17,.15),(1.7,0.,0.),21.),
-            (self.at(17,.95),(1.7,0.,0.),21.),
+            (self.at(17,.15),(-1.65,0.,0.),15.5),
+            (self.at(17,.95),(-1.65,0.,0.),15.5),
             (self.at(18,.35),(0.,-.3,0.),6.8),
             (self.at(18,.60),(0.,-.3,0.),6.8),
             (self.at(18,.90),(0.,0.,0.),14.),
             (self.at(19,.35),(0.,-.3,0.),6.8),
             (self.at(20,.02),(0.,-.3,0.),6.8),
-            (self.at(20,.22),(-3.,0.,0.),34.),
-            (self.at(21,.00),(-3.,0.,0.),34.),
+            (self.at(20,.22),(-2.,0.,0.),46.),
+            (self.at(21,.00),(-2.,0.,0.),46.),
             (self.at(21,.35),(0.,-.3,0.),6.8),
             (self.at(21,.90),(0.,-.3,0.),6.8),
             (self.at(22,.20),(0.,0.,0.),18.),
             (self.at(22,.90),(0.,0.,0.),18.),
-            (self.at(23,.35),(1.,0.,0.),36.),
-            (self.at(23,.95),(1.,0.,0.),36.),
+            (self.at(23,.35),(-2.,0.,0.),46.),
+            (self.at(23,.95),(-2.,0.,0.),46.),
             (self.at(24,.55),(0.,-.5,0.),14.),
             (self.at(24,.95),(0.,-.5,0.),14.),
-            (self.at(25,.48),(-3.,0.,0.),34.),
-            (self.at(25,1),(-3.,0.,0.),34.)]
+            (self.at(25,.48),(-2.,0.,0.),46.),
+            (self.at(25,1),(-2.,0.,0.),46.)]
 
     def at(self,sid,q):
         a,z=self.spans[sid]
@@ -166,11 +166,20 @@ class Story:
         process=self.window(frame,18,18)
         current=current*(1-process)+process*self.ramp(frame,18,.15,.58)
         field=field*(1-process)+process*self.ramp(frame,18,.58,.92)
+        def move(a,b):
+            return smooth((frame-a)/max(1.,b-a))
+        wire_stage=max(
+            move(self.at(12,.95),self.at(13,.30))*(1-move(self.at(14,.90),self.at(15,.65))),
+            move(self.at(16,.85),self.at(17,.15))*(1-move(self.at(17,.95),self.at(18,.35))))
+        # Complete the comparison placement before revealing the wire; hide
+        # it before moving Earth back. Otherwise their paths cross in transit.
+        wire=max(self.ramp(frame,13,.30,.50)*(1-self.ramp(frame,14,.65,.85)),
+                 self.ramp(frame,17,.15,.35)*(1-self.ramp(frame,17,.65,.85)))
         return dict(scene_id=sid,time=t,camera=self.camera(frame),cutaway=cut,
             flow=self.ramp(frame,9,.22,.85)*(1-single),seed=self.window(frame,15,15),current=current,
             field=field,local_field=max(self.window(frame,2,3),self.window(frame,24,24)),
-            wire=max(self.window(frame,13,14),self.window(frame,17,17)),
-            wire_heat=self.window(frame,17,17),
+            wire=wire,wire_stage=wire_stage,
+            wire_heat=wire*self.window(frame,17,17),
             energy=self.ramp(frame,19,.06,.70),magnet=max(self.window(frame,4,4),self.window(frame,7,7),compare),
             compare=compare,single=single,compass=compass,
             sun=self.ramp(frame,20,.0,.18)*(1-compare),

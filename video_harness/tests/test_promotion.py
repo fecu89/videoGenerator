@@ -34,10 +34,11 @@ def test_promotion_rejects_non_web_addresses_and_non_base_urls(url):
 
 
 def test_empty_promotion_keeps_old_v6_hash_and_personal_changes_are_detected():
-    settings = HarnessSettings()
+    from video_harness.settings import ArchivedV6HarnessSettings
+    settings = ArchivedV6HarnessSettings()
     old = settings.model_dump()
     old.pop('promotion')
-    assert settings_sha256(HarnessSettings.model_validate(old)) == settings_sha256(settings)
+    assert settings_sha256(ArchivedV6HarnessSettings.model_validate(old)) == settings_sha256(settings)
     assert settings_sha256(settings) == '1a83ee8dc1f349f8ab1896a10544c3899267397a7e12bd5a2bb6c5ad49753dfc'
     promoted = settings.model_copy(update={'promotion': PromotionSettings(base_url='https://example.org')})
     assert settings_sha256(promoted) != settings_sha256(settings)

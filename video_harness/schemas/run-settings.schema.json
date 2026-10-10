@@ -1,5 +1,28 @@
 {
   "$defs": {
+    "BlenderSettings": {
+      "additionalProperties": false,
+      "properties": {
+        "shadow_pool_mb": {
+          "default": 2048,
+          "enum": [
+            16,
+            32,
+            64,
+            128,
+            256,
+            512,
+            1024,
+            1536,
+            2048
+          ],
+          "title": "Shadow Pool Mb",
+          "type": "integer"
+        }
+      },
+      "title": "BlenderSettings",
+      "type": "object"
+    },
     "LocalVideoSettings": {
       "additionalProperties": false,
       "properties": {
@@ -493,8 +516,8 @@
   "additionalProperties": false,
   "properties": {
     "schema_version": {
-      "const": 6,
-      "default": 6,
+      "const": 7,
+      "default": 7,
       "title": "Schema Version",
       "type": "integer"
     },
@@ -521,6 +544,9 @@
     },
     "promotion": {
       "$ref": "#/$defs/PromotionSettings"
+    },
+    "blender": {
+      "$ref": "#/$defs/BlenderSettings"
     }
   },
   "title": "HarnessSettings",

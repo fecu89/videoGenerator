@@ -57,7 +57,7 @@ const frameFilename = (frameIndex: number): string =>
   `frame-${frameIndex.toString().padStart(6, '0')}.png`;
 
 
-const isSequenceJob = (job: RenderJob): job is SequenceRenderJob =>
+const isSequenceJob = (job: RenderJob): job is Exclude<RenderJob, LegacyRenderJob> =>
   'job_kind' in job && job.job_kind === 'sequence';
 
 
@@ -79,7 +79,7 @@ export async function renderJob(job: RenderJob, options: RenderJobOptions = {}):
   const timer = createRenderTimer();
   const initializationStarted = performance.now();
   await mkdir(job.output_directory, {recursive: true});
-  const bundlePath = await buildBrowserBundle();
+  const bundlePath = 'run_source_bundle' in job ? job.run_source_bundle : await buildBrowserBundle();
   const requestedBackend = job.renderer_backend ?? PRODUCTION_RENDERER_BACKEND;
   const browser = await chromium.launch(chromiumLaunchOptions(requestedBackend));
   const browserVersion = await browser.version();

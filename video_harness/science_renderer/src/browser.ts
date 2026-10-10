@@ -44,7 +44,7 @@ declare global {
 }
 
 
-let activeJob: RenderJob | undefined;
+let activeJob: LegacyRenderJob | SequenceRenderJob | undefined;
 let renderer: THREE.WebGLRenderer | undefined;
 let objects: SharedSceneObjects | undefined;
 let controller: SceneController | undefined;
@@ -70,6 +70,7 @@ const physicsFromJob = (job: LegacyRenderJob): Physics =>
 
 
 const initialize = async (job: RenderJob): Promise<void> => {
+  if ('run_source_bundle' in job) throw new Error('Run sources require their run browser bundle');
   const canvas = document.querySelector<HTMLCanvasElement>('#science-canvas');
   if (!canvas) throw new Error('science canvas is missing');
 

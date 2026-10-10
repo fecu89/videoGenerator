@@ -138,7 +138,7 @@ python -m video_harness settings runs/<run>
 python -m video_harness settings runs/<run> --refresh-settings
 ```
 
-현재 설정은 **schema-v6**입니다. 프로젝트의 schema-v5 파일은 읽을 때 새 형식으로
+현재 설정은 **schema-v7**입니다. 프로젝트의 schema-v5/v6 파일은 읽을 때 새 형식으로
 해석하고, 저장할 때 고정 프리뷰 항목을 제거합니다. 읽기만 하면 파일을 바꾸지 않습니다.
 기존 실행 스냅샷과 승인 해시는 유지하며, 명시적 `--refresh-settings`로만 갱신합니다.
 과거 Vox 기록은 해시 조회를 지원하고 Vox 재합성은 지원하지 않습니다.
@@ -175,3 +175,10 @@ Metal/SwiftShader, `--quality final`, 임시 출력 루트를 사용하는 성�
 공용 설정이나 Git에는 넣지 않습니다. 모듈이 없으면 영상 제작만 정상 완료합니다.
 전달 계획은 `python -m video_harness deliver runs/<run> --plan`으로 확인하며,
 업로드에 실패해도 완성된 영상을 다시 만들 필요는 없습니다.
+
+### Blender 그림자 메모리
+
+고급 옵션의 `blender.shadow_pool_mb`는 EEVEE Shadow Pool 용량이며 새 실행 기본값은
+2048MB(2GB)입니다. 디스크 캐시나 GI 캐시 용량과는 별개입니다. `run-settings.json`에
+고정하며 기존 v6 이하 실행은 기존 자료형·해시를 유지합니다. 공통 실행기가 장면 구성
+후 저장·렌더 전에 적용하고 렌더 보고서에 실제값을 기록합니다.

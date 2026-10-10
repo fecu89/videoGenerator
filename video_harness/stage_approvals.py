@@ -48,7 +48,7 @@ def current_renderer_versions(run: Path) -> dict[str, str]:
     from .sequence_plans import load_local_sequence_plan
     from .sequence_render import backend_for_plan
     local = load_local_sequence_plan(run / 'local-sequence-plan.json')
-    backend = backend_for_plan(local)
+    backend = backend_for_plan(local, run_dir=run)
     versions: dict[str, str] = {}
     for sequence in local.sequences:
         chosen = backend.backend_for_sequence(sequence.sequence_id) if hasattr(backend, 'backend_for_sequence') else backend

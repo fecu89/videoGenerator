@@ -275,3 +275,21 @@ f=2Ωsinφ를, `relative()`는 일정 두께·마찰 없는 모형의 ζ=f(초�
 시각 사건·관측 기준·장면 순서가 바뀐다면 기존 승인 규칙을 다시 따른다.
 대표 프레임은 Blender MCP로 검토하고 긴 전체 렌더는 별도 Blender 프로세스로
 실행해 데스크톱 작업을 점유하지 않는다.
+
+## 새 장면 코드와 Shadow Pool
+
+새 장면은 공용 `blender_renderer/`에 추가하지 않고 [run 소스 계약](run-render-sources.md)을
+따라 `runs/<run>/scripts/`에 작성한다. 프리뷰·초본·최종본·대안 편집·MCP는 동일한
+snapshot과 설정을 사용한다. 원본 run과 `.local-*` 출력 staging 경로는 분리된다.
+
+새 설정 v7의 `blender.shadow_pool_mb`는 2048MB(2GB)가 기본이며 설정 화면의
+고급 옵션에서 바꾼다. Blender 5.2.1에서 지원하는 16·32·64·128·256·512·1024·1536·2048MB만
+허용한다. 적용값은 `frame-report.json`의 `blender_settings.shadow_pool_mb`에 기록하고
+저장한 `.blend`의 `scene.eevee.shadow_pool_size`와 일치해야 한다. 지원하지 않는
+Blender 버전이나 값은 오류로 중단한다. 기존 v6 이하 실행을 자동 갱신하지 않는다.
+
+`Shadow buffer full`과 함께 그림자가 누락되면 Shadow Pool 부족을 먼저 확인한다.
+넓은 평면의 줄무늬·자기 그림자 오류는 용량 부족과 별개다. 광원·접촉면·표면 분할·
+그림자 해상도를 살펴보고, 2GB 적용만으로 해결됐다고 보고하지 않는다. 같은 연속
+프레임을 최종 해상도에서 512MB와 2048MB로 비교하여 누락·깜빡임·줄무늬와 로그를
+각각 확인한다.

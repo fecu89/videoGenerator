@@ -1,5 +1,9 @@
 # Video Generator
 
+El código, las validaciones y las pruebas de cada vídeo van en `runs/<run>/scripts/`, los recursos en `assets/` y los archivos temporales en `.render-cache/`. Declare las dependencias en `render-source.json`: la producción habitual no requiere modificar código compartido ni hacer commits. La configuración v7 usa 2048 MB para Blender EEVEE Shadow Pool; se conservan los ajustes de ejecuciones anteriores.
+
+[Run render sources](video_harness/docs/run-render-sources.md)
+
 [English](README.md) · [한국어](README.ko.md) · [日本語](README.ja.md) · [简体中文](README.zh-CN.md) · **Español**
 
 Le das un tema y un agente de IA investiga, escribe el guion, le pone voz y construye las imágenes en 3D hasta terminar un vídeo explicativo. Esta carpeta es el espacio de trabajo para eso.

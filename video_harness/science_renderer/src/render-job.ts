@@ -115,6 +115,13 @@ export interface SequenceStateSample {
   callouts?: Array<Record<string, unknown>>;
 }
 
+export interface RunSequenceRenderJob extends Omit<SequenceRenderJob, 'physics' | 'style'> {
+  physics: Record<string, unknown>;
+  style: Record<string, unknown>;
+  run_source_bundle: string;
+  run_source_asset_urls: Record<string, string>;
+}
+
 
 export interface LegacyFrameReport {
   scene_id: number;
@@ -148,4 +155,4 @@ export interface SequenceFrameReport {
 
 
 export type FrameReport = LegacyFrameReport | SequenceFrameReport;
-export type RenderJob = LegacyRenderJob | SequenceRenderJob;
+export type RenderJob = LegacyRenderJob | SequenceRenderJob | RunSequenceRenderJob;

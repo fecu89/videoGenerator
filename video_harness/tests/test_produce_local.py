@@ -331,6 +331,25 @@ def test_default_runs_only_draft_render_and_qa(monkeypatch, tmp_path):
     assert report.quality == "draft"
     assert events == ["validate", "compile", "render:draft", "qa:draft"]
     assert (tmp_path / "final-draft.mp4").exists()
+
+
+def test_draft_rechecks_source_approval_after_localization(monkeypatch, tmp_path):
+    import video_harness.produce_local as module
+    from video_harness.tests.test_render_sources import make_run
+    from video_harness.tests.test_run_source_routing import write_approval_plan
+    from video_harness import stage_approvals as stage
+    from video_harness.production import script_sha256
+    run = make_run(tmp_path/'run')
+    write_approval_plan(run)
+    (run/'preview-report.json').write_text(json.dumps({'renderer_versions':stage.current_renderer_versions(run),
+        'local_sequence_plan_sha256':script_sha256(run/'local-sequence-plan.json')}))
+    stage.approve_preview(run)
+    _install_fake_pipeline(monkeypatch, run)
+    monkeypatch.setattr(module,'_localize_stage',lambda *args,**kwargs:(run/'assets/model.glb').write_bytes(b'edited while localizing'))
+    monkeypatch.setattr('video_harness.creative_gates.require_text_render',lambda *args,**kwargs:None)
+    monkeypatch.setattr(module,'write_local_production_report',lambda *args,**kwargs:'completed')
+    with pytest.raises(ValueError,match='렌더러'):
+        module.produce_local(run,quality='draft',compile_prompts=False)
     assert not (tmp_path / "final.mp4").exists()
 
 

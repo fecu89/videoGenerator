@@ -11,7 +11,7 @@ FIXTURE = Path(__file__).with_name('fixtures') / 'archived-v5-custom.json'
 
 def test_preview_is_fixed_and_not_serialized_or_editable():
     settings = HarnessSettings()
-    assert settings.schema_version == 6
+    assert settings.schema_version == 7
     render = settings.render
     assert (render.draft_width, render.draft_height, render.draft_fps) == (384, 216, 9)
     assert (render.preview_interval_seconds, render.contact_sheet_columns) == (.5, 8)
@@ -25,7 +25,7 @@ def test_project_v5_migrates_without_resetting_custom_values_or_writing(tmp_path
     path.write_bytes(FIXTURE.read_bytes())
     before = path.read_bytes()
     settings = load_project_settings(path)
-    assert settings.schema_version == 6
+    assert settings.schema_version == 7
     assert settings.local_video.camera_transition_seconds == .4
     assert settings.local_video.target_beat_max_seconds == 6
     assert settings.music.gain_db == -8

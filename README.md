@@ -1,5 +1,9 @@
 # Video Generator
 
+New video-specific code, validators and tests belong in `runs/<run>/scripts/`, assets in `assets/`, and disposable outputs in `.render-cache/`. Declare dependencies in `render-source.json`; ordinary production requires no shared-code edit or Git commit. New settings v7 default the Blender EEVEE Shadow Pool to 2048 MB; older run snapshots stay unchanged.
+
+[Run render sources](video_harness/docs/run-render-sources.md)
+
 **English** · [한국어](README.ko.md) · [日本語](README.ja.md) · [简体中文](README.zh-CN.md) · [Español](README.es.md)
 
 Give it a topic, and an AI agent researches it, writes the script, adds the voice, and builds the 3D visuals to finish one explainer video. This folder is the workspace for that.

@@ -247,10 +247,20 @@ class PromotionSettings(StrictModel):
         return urlunsplit((url.scheme, url.netloc, f"/{lang}{url.path}", "", ""))
 
 
-class HarnessSettings(ArchivedV5HarnessSettings):
+class ArchivedV6HarnessSettings(ArchivedV5HarnessSettings):
     schema_version: Literal[6] = 6
     render: RenderSettings = Field(default_factory=RenderSettings)
     promotion: PromotionSettings = Field(default_factory=PromotionSettings)
+
+
+class BlenderSettings(StrictModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+    shadow_pool_mb: Literal[16, 32, 64, 128, 256, 512, 1024, 1536, 2048] = 2048
+
+
+class HarnessSettings(ArchivedV6HarnessSettings):
+    schema_version: Literal[7] = 7
+    blender: BlenderSettings = Field(default_factory=BlenderSettings)
 
 
 class ArchivedV4HarnessSettings(ArchivedV5HarnessSettings):
@@ -297,7 +307,7 @@ class LegacyHarnessSettings(StrictModel):
         return self
 
 
-ResolvedHarnessSettings = HarnessSettings | ArchivedV5HarnessSettings | ArchivedV4HarnessSettings | ArchivedHarnessSettings | AppleHarnessSettings | LegacyHarnessSettings
+ResolvedHarnessSettings = HarnessSettings | ArchivedV6HarnessSettings | ArchivedV5HarnessSettings | ArchivedV4HarnessSettings | ArchivedHarnessSettings | AppleHarnessSettings | LegacyHarnessSettings
 
 
 def load_project_settings(settings_file: Path | None = None) -> HarnessSettings:
@@ -321,6 +331,9 @@ def load_project_settings(settings_file: Path | None = None) -> HarnessSettings:
         payload["schema_version"] = 6
         for key in ("draft_width", "draft_height", "draft_fps", "preview_interval_seconds", "contact_sheet_columns"):
             payload["render"].pop(key)
+    if payload.get("schema_version") == 6:
+        payload = ArchivedV6HarnessSettings.model_validate(payload).model_dump(mode="json")
+        payload["schema_version"] = 7
     local_path = path.with_name(f"{path.stem}.local{path.suffix}")
     if local_path.is_file():
         local = json.loads(local_path.read_text(encoding="utf-8"))
@@ -476,6 +489,8 @@ def resolve_run_settings(
         elif schema_version == 5:
             settings = ArchivedV5HarnessSettings.model_validate(payload)
         elif schema_version == 6:
+            settings = ArchivedV6HarnessSettings.model_validate(payload)
+        elif schema_version == 7:
             settings = HarnessSettings.model_validate(payload)
         else:
             raise ValueError(

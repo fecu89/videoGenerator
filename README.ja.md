@@ -1,5 +1,9 @@
 # Video Generator
 
+動画専用コード・検証・テストは `runs/<run>/scripts/`、素材は `assets/`、中間生成物は `.render-cache/` に保存します。`render-source.json` に依存ファイルを宣言し、通常の制作では共有コードの変更や Git コミットを不要にします。新しい設定 v7 の Blender EEVEE Shadow Pool は既定で 2048 MB、既存 run の設定は維持します。
+
+[Run render sources](video_harness/docs/run-render-sources.md)
+
 [English](README.md) · [한국어](README.ko.md) · **日本語** · [简体中文](README.zh-CN.md) · [Español](README.es.md)
 
 テーマをひとつ渡すと、AIエージェントが調査し、台本を書き、声を付け、3Dの画面まで作って解説動画を1本仕上げます。このフォルダはそのための作業フォルダです。

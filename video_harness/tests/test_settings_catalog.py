@@ -10,7 +10,7 @@ from video_harness.settings_catalog import (
 def test_catalog_contains_only_supported_operator_choices():
     settings = HarnessSettings().model_dump(mode='json')
     keys = [item.key for item in settings_catalog()]
-    assert len(keys) == len(set(keys)) == 59
+    assert len(keys) == len(set(keys)) == 60
     assert editable_setting_keys() == frozenset(keys)
     for key in keys:
         group, field = key.split('.')
