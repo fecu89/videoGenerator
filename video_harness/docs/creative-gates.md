@@ -34,6 +34,11 @@ python -m video_harness check-creative story runs/<run>
 
 `voice`는 이 검사를 통과하기 전에 모델을 로드하거나 음성을 만들지 않는다.
 
+`story-chain.json`의 본편 검토만으로 선택된 쇼츠의 제목·답·전제까지 검증되지는
+않는다. [편집·쇼츠·전달 검토](editorial-release-checks.md)에 따라 별도로 읽고
+`release-review.md`에 남긴다. 현재 이 기록은 에이전트가 수행하는 의미 검토이며
+`check-creative story`가 자동 검사하는 새 필드나 게이트가 아니다.
+
 ## 2. 모든 장면 경계의 전환 계획
 
 `continuity-plan.json`을 [스키마](../schemas/continuity-plan.schema.json)에 맞게
@@ -97,6 +102,10 @@ Blender는 평가된 `matrix_world`, Three.js는 갱신된 `matrixWorld`를 캡�
 `localized_length_mismatch`, `localized_no_audio`, `subtitle_gate_failed`).
 영상 전체의 물리적 정확성과 미학은 여전히 직접 검토하며, 대표 프레임과 전환
 전·중·후의 시각 검토도 기록한다.
+
+자막 형식·길이·음성 존재 검사는 쇼츠에서 실제 제외 구간의 음성이 제거됐는지
+보증하지 않는다. 외부 게시 전 [실제 쇼츠 음성·자막 검사](editorial-release-checks.md)를
+수행한다. 본편에서 장면을 제거한 뒤 새로 생긴 경계도 따로 검토한다.
 
 확대 중 내부 구조의 가림, 분리 중 남은 긴 결합선, 집결 중 겹침과 화면 잘림,
 글자 크기와 배치는 실제 MP4의 전환 프레임 및 움직임으로 확인한다. 먼저

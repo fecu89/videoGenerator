@@ -10,8 +10,8 @@
 이 폴더의 작업은 Codex가 편집 판단과 샷 설계를 맡고 Python이 검증, 음성 생성,
 샷 컴파일, 결정론적 렌더와 합본을 수행하는 제작 흐름이다. 새 실행의 전체
 대본은 항상 사람이 피드백하고 명시적으로 승인해야 한다. 음성 뒤에 만든
-영상 생성대본도 사람이 별도로 검토하고 승인해야 하며, 그 전에는 렌더링으로
-넘어가지 않는다.
+영상 계획은 에이전트가 검증한 뒤 프리뷰로 제시한다. 별도의 영상대본 승인은
+받지 않으며, 기존 프리뷰·초본 승인 경계를 지킨다.
 
 ## 공통 연출 기준
 
@@ -131,6 +131,13 @@ PDF 입력은 원문과 페이지의 표, 도표, 사진, 배치를 함께 검�
 7. 각 사실 기반 씬의 `source_ids`에 근거 출처를 연결한다.
 8. 로컬 모델 검증을 실행한다.
 
+모델 검증과 별도로 [편집·쇼츠·전달 검토](../docs/editorial-release-checks.md)의
+대본 검토를 수행한다. `shorts_title`, 설명, `in_shorts`를 대본과 함께 정하고,
+남긴 장면만 순서대로 읽은 **쇼츠 전체 나레이션**을 `story-review.md`에 함께 둔다.
+본편·쇼츠 각각 제목이 약속한 질문, 직접 답하는 문장/씬, 필요한 전제와 결말을
+기록한다. 제목 변경 뒤에도 실제 적용되는 override를 포함해 다시 대조한다.
+검토 결과는 [양식](templates/release-review.md)을 복사한 `release-review.md`에 남긴다.
+
 ```bash
 /opt/homebrew/opt/python@3.13/libexec/bin/python3 -c "from pathlib import Path; from video_harness.models import ScriptArtifact; ScriptArtifact.model_validate_json(Path('runs/<run>/script.json').read_text()); print('script.json OK')"
 ```
@@ -218,7 +225,10 @@ Python 스레드 풀에 나누지 않는다. schema-v1 원격 TTS와 schema-v2 A
 - 한 사건이 현재 최대 길이 안에 들어갈 수 없을 때만 두 씬으로 나누고 이후 씬 번호를 연속되게 다시 매긴다.
 - 같은 사건을 다룬 인접 씬만 병합할 수 있다.
 
-나레이션을 수정한 씬은 `duration_seconds`와 `audio_file`을 `null`로 되돌리고 해당 씬만 `--force`로 다시 생성한다. 모든 씬이 effective settings의 현재 길이 범위에 들어갈 때까지 반복한다. 스토리 의미가 달라지는 수정은 사용자에게 다시 확인한다.
+나레이션 수정안은 변경된 전체 대본으로 제시해 새 승인을 받은 뒤 해당 씬의
+`duration_seconds`와 `audio_file`을 `null`로 되돌리고 `--force`로 다시 생성한다.
+뜻이 같다는 이유로 문장 수정의 승인 경계를 생략하지 않는다. 모든 씬이
+effective settings의 현재 길이 범위에 들어갈 때까지 필요한 범위만 반복한다.
 
 ## 6-1. 번역과 언어별 음성
 
@@ -338,6 +348,8 @@ python -m video_harness plan-video runs/<run>
 이미지, 겹침·잘림, 불필요한 하단 문구, 모든 장면의 움직임, 전환의 연속성을
 실제 프레임과 연결한다. 시각 수정에서는 기존 음성 재사용 여부도 확인한다.
 이 기록은 에이전트의 시각·내용 검토이며 아래 CLI 검사와 함께 수행한다.
+물리량의 시각적 구별, 절개·복원 중 깜박임, 세로 화면의 대상 크기를 포함한다.
+쇼츠를 실제로 잘라낸 뒤 생기는 새 접합부는 본편의 연속성 검사로 대신하지 않는다.
 
 계획을 작성하면 별도의 영상대본 승인 없이 대표 프레임을 렌더하고 검토 웹을 자동으로 연다.
 
@@ -460,7 +472,7 @@ schema-v1 샷 기반 실행은 기존 `render-production`과 `review-shot` 명�
 호환 렌더는 Three.js를 호출하는 경로이며 Python 3D 렌더러가 아니다.
 최종본의 직접 공개는 차단된다. 새 구조로 이전하려면 위 명령의
 `--schema-version 1` 대신 `--schema-version 2`를 사용하고, 질문 사슬·연속성
-검토와 영상 생성대본 승인을 거쳐 `produce`로 제작한다.
+검토와 계획 검증·프리뷰·초본 승인을 거쳐 `produce`로 제작한다.
 
 3D 구현은 Blender MCP/네이티브 Blender를 우선하고 Three.js도 허용한다.
 독립적인 Python 3D 렌더 경로는 추가하지 않는다.
@@ -495,3 +507,11 @@ schema-v1 샷 기반 실행은 기존 `render-production`과 `review-shot` 명�
 `delivery-report.json`을 확인한 뒤 `python -m video_harness deliver runs/<run>`으로
 재시도한다. 외부 게시 완료는 별도 보고서의 성공 상태와 실제 URL을 확인해 알린다.
 사용자가 승인한 로컬 업로더 설정에 따라 동작하며 초본은 업로드하지 않는다.
+
+쇼츠 생성 성공과 실제 음성·자막 일치는 별개다. 외부 게시 전에
+[최종 쇼츠 검사와 자동 전달의 단계 분리](../docs/editorial-release-checks.md)를
+수행한다. 자동 전달이 켜져 있으면 단일 `produce --quality final` 명령이
+수동 검토를 기다린다고 가정하지 않는다. 이 문서에서 요구하는 추가 검토는
+현재 공용 CLI의 자동 게이트에 아직 연결되어 있지 않다.
+Studio 추가 음성은 같은 문서의 파일 선택 대체 절차와 저장 후 오디오 열 검증을
+따른다. `processing`은 `published`로 기록하지 않는다.
