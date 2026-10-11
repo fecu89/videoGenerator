@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "canvas": [1080, 1920],
+  "safe_area": [0, 290, 1080, 1270],
+  "title_box": [30, 300, 1020, 130],
+  "picture_box": [0, 500, 1080, 724],
+  "picture_fit": "cover",
+  "subtitle_box": [70, 1279, 940, 280],
+  "title_font_size": 92,
+  "subtitle_font_size": 64,
+  "subtitle_font_size_by_language": {"ko": 70, "ja": 66, "zh": 70}
+}

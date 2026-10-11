@@ -135,7 +135,34 @@ def split_for_two_lines(text: str, lang: str, chars_per_line: int) -> list[str]:
     return split_for_two_lines(head, lang, chars_per_line) + split_for_two_lines(tail, lang, chars_per_line)
 
 
-def build_cues(report: dict, offsets: dict[int, tuple[float, float]], *, lang: str, chars_per_line: int) -> list[Cue]:
+OVERRIDES_FILENAME = "subtitle-overrides.json"   # {lang: {scene_id: [display sentences]}} for approved runs
+
+
+def display_sentences(run: Path, lang: str, report: dict) -> tuple[dict[int, list[str]], list[str]]:
+    """Display text per scene, one entry per spoken sentence: the run's subtitle-overrides.json
+    wins, then the Korean script's `subtitle_text`; otherwise the spoken sentences are shown."""
+    chosen: dict[int, list[str]] = {}
+    overrides = run / OVERRIDES_FILENAME
+    if overrides.is_file():
+        for scene_id, texts in (json.loads(overrides.read_text(encoding="utf-8")).get(lang) or {}).items():
+            chosen[int(scene_id)] = [str(t) for t in texts]
+    script = run / "script.json"
+    if lang == "ko" and script.is_file():
+        for scene in json.loads(script.read_text(encoding="utf-8")).get("scenes", []):
+            if scene.get("subtitle_text") and int(scene["scene_id"]) not in chosen:
+                chosen[int(scene["scene_id"])] = [str(t) for t in scene["subtitle_text"]]
+    errors = []
+    spoken = {int(scene["scene_id"]): len(scene["sentences"]) for scene in report["scenes"]}
+    for scene_id, texts in sorted(chosen.items()):
+        if scene_id not in spoken or len(texts) != spoken[scene_id]:
+            errors.append(f"subtitle_text_count: scene {scene_id} has {len(texts)} display sentences for {spoken.get(scene_id, 0)} spoken")
+        elif any(not t.strip() for t in texts):
+            errors.append(f"subtitle_text_empty: scene {scene_id}")
+    return chosen, errors
+
+
+def build_cues(report: dict, offsets: dict[int, tuple[float, float]], *, lang: str, chars_per_line: int,
+               display: dict[int, list[str]] | None = None) -> list[Cue]:
     leading_ms = int(report["sentence_leading_margin_ms"])
     trailing_ms = int(report["sentence_trailing_margin_ms"])
     cues: list[Cue] = []
@@ -146,6 +173,7 @@ def build_cues(report: dict, offsets: dict[int, tuple[float, float]], *, lang: s
         base, slot_end = offsets[int(scene["scene_id"])]
         windows = sentence_windows(scene, leading_ms=scene_leading, trailing_ms=scene_trailing)
         starts = [base + w[0] + lead for w in windows]
+        shown = (display or {}).get(int(scene["scene_id"]))
         for index, (sentence, (w_start, w_end)) in enumerate(zip(scene["sentences"], windows)):
             start = starts[index]
             # The next sentence speaks only after its leading margin, so the gap before
@@ -154,7 +182,8 @@ def build_cues(report: dict, offsets: dict[int, tuple[float, float]], *, lang: s
             end = limit
             window = (base + w_start, min(base + w_end, slot_end))
             overflow = max(0.0, base + w_end - slot_end)
-            pieces = split_for_two_lines(sentence["text"], lang, chars_per_line)
+            text = shown[index] if shown and index < len(shown) else sentence["text"]
+            pieces = split_for_two_lines(text, lang, chars_per_line)
             total = sum(len(p) for p in pieces) or 1
             cursor = start
             for piece in pieces:
@@ -232,7 +261,10 @@ def subtitle_cue_spans(run_dir: Path, lang: str, *, output_fps: int) -> list[tup
     local = load_local_sequence_plan(run / "local-sequence-plan.json")
     report = json.loads(report_path_for(run, lang).read_text(encoding="utf-8"))
     voice = load_language_voices(run).voices[lang]
-    cues = build_cues(report, scene_offsets(local, output_fps=output_fps), lang=lang, chars_per_line=voice.chars_per_line)
+    display, display_errors = display_sentences(run, lang, report)
+    if display_errors:
+        _named_gate(run, gate_name(lang), display_errors, language=lang, quality=quality, cues=0)
+    cues = build_cues(report, scene_offsets(local, output_fps=output_fps), lang=lang, chars_per_line=voice.chars_per_line, display=display)
     return [(cue.start, cue.end) for cue in cues]
 
 
@@ -251,7 +283,10 @@ def speech_spans(run_dir: Path, lang: str, *, output_fps: int) -> list[tuple[flo
     local = load_local_sequence_plan(run / "local-sequence-plan.json")
     report = json.loads(report_path_for(run, lang).read_text(encoding="utf-8"))
     voice = load_language_voices(run).voices[lang]
-    cues = build_cues(report, scene_offsets(local, output_fps=output_fps), lang=lang, chars_per_line=voice.chars_per_line)
+    display, display_errors = display_sentences(run, lang, report)
+    if display_errors:
+        _named_gate(run, gate_name(lang), display_errors, language=lang, quality=quality, cues=0)
+    cues = build_cues(report, scene_offsets(local, output_fps=output_fps), lang=lang, chars_per_line=voice.chars_per_line, display=display)
     return speech_spans_from_cues(cues, trailing_seconds=int(report["sentence_trailing_margin_ms"]) / 1000)
 
 
@@ -261,7 +296,10 @@ def write_subtitles(run_dir: Path, lang: str, *, quality: str, width: int, heigh
     local = load_local_sequence_plan(run / "local-sequence-plan.json")
     report = json.loads(report_path_for(run, lang).read_text(encoding="utf-8"))
     voice = load_language_voices(run).voices[lang]
-    cues = build_cues(report, scene_offsets(local, output_fps=output_fps), lang=lang, chars_per_line=voice.chars_per_line)
+    display, display_errors = display_sentences(run, lang, report)
+    if display_errors:
+        _named_gate(run, gate_name(lang), display_errors, language=lang, quality=quality, cues=0)
+    cues = build_cues(report, scene_offsets(local, output_fps=output_fps), lang=lang, chars_per_line=voice.chars_per_line, display=display)
     out_dir = Path(out_root or run).resolve() / SUBTITLE_DIR
     out_dir.mkdir(parents=True, exist_ok=True)
     ass_path = out_dir / f"{lang}.ass"

@@ -105,7 +105,7 @@ def test_cues_rewrap_for_portrait_and_ass_retimes_for_speed(tmp_path):
     assert all(line[0] not in '、。' for line in wrap_cjk('あ' * 12 + '、' + 'い' * 12 + '。', 13))
     ass = shorts_ass(lang='en', font='Helvetica Neue', title='Why', cues=subtitle_cues(tmp_path / 'en.srt', 'en'))
     assert 'Dialogue: 0,0:00:00.00,10:00:00.00,Title,,0,0,0,,Why' in ass
-    assert 'Dialogue: 0,0:00:00.00,0:00:01.00,Sub,,0,0,0,,North of the equator, a steady wind blows.' in ass
+    assert 'Dialogue: 0,0:00:00.00,0:00:01.00,Sub,,0,0,0,,North of the equator, a steady wind blows.' in ass.replace(r'\N', ' ')
     assert 'Style: Title' not in shorts_ass(lang='en', font='Helvetica Neue', title=None, cues=[])
 
 

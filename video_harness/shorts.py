@@ -27,6 +27,7 @@ from .models import ScriptArtifact
 from .sequence_plans import load_local_sequence_plan
 from .settings import resolve_run_settings
 from .storage import atomic_write
+from .shorts_layout import ass_style, cjk_chars_per_line, inspect_ass_bounds, load_layout, picture_filter, subtitle_font_size
 from .translations import TRANSLATIONS_FILENAME, load_translations
 
 SHORTS_DIR = "shorts"
@@ -34,14 +35,7 @@ OVERRIDES_FILENAME = "upload-overrides.json"   # titles and descriptions decided
 SPEED = 1.15
 MAX_SECONDS = 180.0        # longest video YouTube accepts as a Short
 WIDTH, HEIGHT = 1080, 1920
-KEEP = 0.84                # share of the landscape width that is kept
-PICTURE_TOP = 500          # top of the picture; the title sits above it, subtitles below it
-TITLE_GAP = 70             # space between the title and the top of the picture
-TITLE_MAX_SIZE = 92
-TITLE_WIDTH = 980          # widest a one-line title may be
-SUBTITLE_SIZE = {"ko": 70, "ja": 66, "zh": 70}
-DEFAULT_SUBTITLE_SIZE = 64
-CJK_LINE = {"ja": 13, "zh": 13}   # characters per subtitle line where there are no spaces to wrap at
+CJK = ("ja", "zh")         # no spaces for the renderer to wrap at: lines are cut here
 FALLBACK_FONT = "Apple SD Gothic Neo"
 _BREAK_AFTER = "、。，,；：？！"
 _NEVER_FIRST = _BREAK_AFTER + "）」』"
@@ -149,10 +143,13 @@ def cut_cues(cues: Sequence[tuple[float, float, str]], segments: Sequence[tuple[
     return moved
 
 
-def title_size(text: str) -> int:
-    """Largest size up to TITLE_MAX_SIZE that keeps the title on one line (measured bold glyph widths)."""
+def title_size(text: str, layout: dict | None = None) -> int:
+    """Largest size up to the layout's title size that keeps the title on one line of the
+    title box (estimated bold glyph widths; the real glyphs are measured before encoding)."""
+    layout = layout or load_layout()
     units = sum(1.0 if unicodedata.east_asian_width(ch) in "WF" else 0.35 if ch.isspace() else 0.70 for ch in text)
-    return max(40, min(TITLE_MAX_SIZE, int(TITLE_WIDTH / (max(units, 1.0) * 0.72))))
+    usable = layout["title_box"][2] - 24        # outline on both ends plus estimate slack
+    return max(40, min(layout["title_font_size"], int(usable / (max(units, 1.0) * 0.72))))
 
 
 def wrap_cjk(text: str, limit: int) -> list[str]:
@@ -177,8 +174,10 @@ def wrap_cjk(text: str, limit: int) -> list[str]:
     return lines
 
 
-def subtitle_cues(path: Path, lang: str) -> list[tuple[float, float, str]]:
-    """(start, end, text) from an .srt, with its landscape line breaks replaced by portrait ones."""
+def subtitle_cues(path: Path, lang: str, layout: dict | None = None) -> list[tuple[float, float, str]]:
+    """(start, end, text) from an .srt with its landscape line breaks removed: libass wraps
+    spaced languages inside the subtitle box, Japanese and Chinese are cut to the box width."""
+    layout = layout or load_layout()
     rows = []
     for block in re.split(r"\n\s*\n", path.read_text(encoding="utf-8").strip()):
         lines = block.strip().split("\n")
@@ -187,7 +186,7 @@ def subtitle_cues(path: Path, lang: str) -> list[tuple[float, float, str]]:
         start, end = (sum(float(x) * m for x, m in zip(re.split("[:,]", stamp.strip()), (3600, 60, 1, .001)))
                       for stamp in lines[1].split("-->"))
         parts = [line.strip() for line in lines[2:]]
-        text = "\\N".join(wrap_cjk("".join(parts), CJK_LINE[lang])) if lang in CJK_LINE else " ".join(parts)
+        text = "\\N".join(wrap_cjk("".join(parts), cjk_chars_per_line(layout, lang))) if lang in CJK else " ".join(parts)
         rows.append((start, end, text))
     return rows
 
@@ -197,19 +196,18 @@ def _stamp(seconds: float) -> str:
     return "%d:%02d:%02d.%02d" % (cs // 360000, cs // 6000 % 60, cs // 100 % 60, cs % 100)
 
 
-def shorts_ass(*, lang: str, font: str, title: str | None, cues: Sequence[tuple[float, float, str]]) -> str:
-    picture_bottom = PICTURE_TOP + round(WIDTH * 9 / 16 / KEEP)
-    rest = "&H00FFFFFF,&H00201A0F,&H80000000,1,0,0,0,100,100,0,0,1,4,2"
+def shorts_ass(*, lang: str, font: str, title: str | None, cues: Sequence[tuple[float, float, str]], layout: dict | None = None) -> str:
+    layout = layout or load_layout()
     lines = [
         "[Script Info]", "ScriptType: v4.00+", f"PlayResX: {WIDTH}", f"PlayResY: {HEIGHT}", "WrapStyle: 0",
         "ScaledBorderAndShadow: yes", "", "[V4+ Styles]",
         "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, "
         "Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, "
         "MarginR, MarginV, Encoding",
-        f"Style: Sub,{font},{SUBTITLE_SIZE.get(lang, DEFAULT_SUBTITLE_SIZE)},&H00FFFFFF,{rest},8,70,70,{picture_bottom + 56},1",
+        ass_style('Sub', font, layout, subtitle_font_size(layout, lang)),
     ]
     if title:
-        lines.append(f"Style: Title,{font},{title_size(title)},&H0078D7FF,{rest},2,30,30,{HEIGHT - PICTURE_TOP + TITLE_GAP},1")
+        lines.append(ass_style('Title', font, layout, title_size(title, layout)))
     lines += ["", "[Events]", "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text"]
     if title:
         lines.append(f"Dialogue: 0,{_stamp(0)},{_stamp(36000)},Title,,0,0,0,,{title}")
@@ -217,15 +215,17 @@ def shorts_ass(*, lang: str, font: str, title: str | None, cues: Sequence[tuple[
     return "\n".join(lines) + "\n"
 
 
-def _filter_graph(ass: Path, audio_input: int, segments: Sequence[tuple[float, float]] | None = None) -> str:
+def _filter_graph(ass: Path, audio_input: int, segments: Sequence[tuple[float, float]] | None = None, layout: dict | None = None) -> str:
+    layout = layout or load_layout()
+    x, y, w, h = layout['picture_box']
     keep = "+".join(f"gte(t,{start:.4f})*lt(t,{end:.4f})" for start, end in segments or [])
     cut_video = f"select='{keep}',setpts=N/FRAME_RATE/TB," if keep else ""
     cut_audio = f"aselect='{keep}',asetpts=N/SR/TB," if keep else ""
     return (
         f"[0:v]{cut_video}setpts=PTS/{SPEED},split=2[a][b];"
         f"[a]scale=-2:{HEIGHT},crop={WIDTH}:{HEIGHT},boxblur=28:4,eq=brightness=-0.22:saturation=0.8[bg];"
-        f"[b]crop=iw*{KEEP}:ih,scale={WIDTH}:-2:flags=lanczos[fg];"
-        f"[bg][fg]overlay=0:{PICTURE_TOP}[v0];"
+        f"[b]{picture_filter(layout)};"
+        f"[bg][fg]overlay={x}+({w}-overlay_w)/2:{y}+({h}-overlay_h)/2[v0];"
         f"[v0]{ass_filter_argument(ass)}[v];"
         f"[{audio_input}:a]{cut_audio}atempo={SPEED}[au]")
 
@@ -248,6 +248,7 @@ def build_shorts(
     if info.width <= info.height:
         return []
     settings = resolve_run_settings(run, persist=False)
+    layout = load_layout(run)
     languages = language_outputs(settings) or [MASTER]
     delivery = delivery_mode(settings)
     voices = load_language_voices(run).voices
@@ -268,12 +269,15 @@ def build_shorts(
         ass = out / f"shorts-{lang}.ass"
         font = voices[lang].font if lang in voices else FALLBACK_FONT
         atomic_write(ass, shorts_ass(lang=lang, font=font, title=resolved_titles.get(lang),
-                                     cues=cut_cues(subtitle_cues(srt, lang), segments) if srt.is_file() else []))
+                                     cues=cut_cues(subtitle_cues(srt, lang, layout), segments) if srt.is_file() else [], layout=layout))
+        bounds = inspect_ass_bounds(ass, layout)
+        atomic_write(out / f'shorts-{lang}-layout.json', json.dumps(
+            {'layout': layout, 'glyph_bounds': bounds, 'visual_review': 'pending'}, ensure_ascii=False, indent=2)+'\n')
         target = out / shorts_name(lang, quality)
         partial = target.with_name(target.stem + ".partial.mp4")
         inputs = ["-i", str(video)] + ([] if audio == video else ["-i", str(audio)])
         command = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", *inputs,
-                   "-filter_complex", _filter_graph(ass, 0 if audio == video else 1, segments), "-map", "[v]", "-map", "[au]",
+                   "-filter_complex", _filter_graph(ass, 0 if audio == video else 1, segments, layout), "-map", "[v]", "-map", "[au]",
                    "-r", "30", "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p",
                    "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", "-shortest", str(partial)]
         try:

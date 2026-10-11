@@ -98,6 +98,19 @@ class Scene(StrictModel):
     sentence_delivery: list[SentenceDelivery] = Field(default_factory=list)
     sentence_pauses: list[SentencePause] = Field(default_factory=list)
     in_shorts: bool = True
+    # Display sentences for subtitles, one per narration sentence. The voice reads
+    # `narration` (pronunciation spellings such as 엘이디); subtitles show these (LED).
+    subtitle_text: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_subtitle_text(self) -> "Scene":
+        if self.subtitle_text:
+            count = len(split_narration_sentences(self.narration))
+            if len(self.subtitle_text) != count:
+                raise ValueError(f"subtitle_text must have one entry per narration sentence ({count})")
+            if any(not text.strip() for text in self.subtitle_text):
+                raise ValueError("subtitle_text entries must not be empty")
+        return self
 
     @model_validator(mode="after")
     def validate_sentence_delivery(self) -> "Scene":

@@ -208,3 +208,14 @@ def test_agent_bootstrap_resolves_to_the_internal_workflow():
 
     assert "video_harness/agent/WORKFLOW.md" in bootstrap
     assert workflow_path.is_file()
+
+
+def test_scene_subtitle_text_must_match_narration_sentence_count():
+    scene = Scene(scene_id=1, title='t', narration='엘이디는 빛을 냅니다. 전류가 흐릅니다.', narrative_role='r',
+                  visual_subject='v', subtitle_text=['LED는 빛을 냅니다.', '전류가 흐릅니다.'])
+    assert scene.subtitle_text[0] == 'LED는 빛을 냅니다.'
+    with pytest.raises(ValidationError, match='subtitle_text'):
+        Scene(scene_id=1, title='t', narration='엘이디는 빛을 냅니다. 전류가 흐릅니다.', narrative_role='r',
+              visual_subject='v', subtitle_text=['LED는 빛을 냅니다.'])
+    with pytest.raises(ValidationError, match='subtitle_text'):
+        Scene(scene_id=1, title='t', narration='하나.', narrative_role='r', visual_subject='v', subtitle_text=[' '])

@@ -21,6 +21,12 @@ python -m video_harness settings-ui
 선택하며 모두 30fps입니다. 기존 사용자 규격은 다른 규격을 고르기 전까지 유지합니다.
 쇼츠 템포를 선택해도 화면 비율은 바뀌지 않습니다.
 
+쇼츠의 파일 규격은 1080×1920을 유지하고 제목·그림·자막은 고정
+[화면 배치](video_harness/docs/shorts-safe-area.md)를 따릅니다.
+별도 후처리 배치 파일 `shorts-layout.json`을 실행 폴더에 둘 수 있으며,
+없으면 `video_harness/shorts-safe-layout.json`을 사용합니다. 승인된 본편 설정은
+변경하지 않습니다. 제목·자막의 실제 글자 경계가 넘으면 쇼츠 인코딩을 중단합니다.
+
 현재 기본 출력은 **화면 설명 글자 → 설명 글자 없음**과
 **자막·언어별 출력 → 한국어 본편 + 추가 언어 음성**입니다.
 `final-ko.mp4` 하나와 `final-en.m4a`, `final-ja.m4a`, `final-zh.m4a`,

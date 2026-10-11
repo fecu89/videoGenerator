@@ -161,3 +161,42 @@ def test_older_master_reports_use_audible_speech_plus_margins():
     assert windows[0] == pytest.approx((0.0, 2.8409), abs=1e-3)
     assert windows[1][0] + 0.1 == pytest.approx(2.94, abs=0.01)
     assert windows[1][0] + 0.1 + 5.2287 == pytest.approx(8.16, abs=0.01)
+
+
+def _korean_run(tmp_path, *, narration, subtitle_text=None):
+    (tmp_path / 'run-settings.json').write_text(json.dumps({'schema_version': 4, 'local_video': {'text_policy': 'subtitles', 'subtitle_languages': 'ko'}}))
+    (tmp_path / 'local-sequence-plan.json').write_text(two_sequence_plan().model_dump_json())
+    scene = {'scene_id': 1, 'title': 't', 'narration': narration, 'narrative_role': 'r', 'visual_subject': 'v'}
+    if subtitle_text is not None:
+        scene['subtitle_text'] = subtitle_text
+    (tmp_path / 'script.json').write_text(json.dumps({'scenes': [scene, {**scene, 'scene_id': 2, 'subtitle_text': []}]}, ensure_ascii=False))
+    from video_harness.narration import split_narration_sentences
+    sentences = [{'text': s, 'sample_count': 1500, 'tempo_factor': 1.0} for s in split_narration_sentences(narration)]
+    (tmp_path / 'voice-generation-report.json').write_text(json.dumps({
+        'schema_version': 1, 'sentence_leading_margin_ms': 100, 'sentence_trailing_margin_ms': 900,
+        'scenes': [{'scene_id': 1, 'sample_rate': 1000, 'tempo_factor': 1.0, 'sentences': sentences},
+                   {'scene_id': 2, 'sample_rate': 1000, 'tempo_factor': 1.0, 'sentences': sentences}]}, ensure_ascii=False))
+    from video_harness.language_voices import load_language_voices
+    load_language_voices(tmp_path)
+
+
+def test_korean_subtitles_show_script_subtitle_text_while_the_voice_reads_narration(tmp_path):
+    _korean_run(tmp_path, narration='엘이디는 빛을 냅니다. 전류가 흐릅니다.', subtitle_text=['LED는 빛을 냅니다.', '전류가 흐릅니다.'])
+    st.write_subtitles(tmp_path, 'ko', quality='draft', width=384, height=216, output_fps=10)
+    srt = (tmp_path / 'subtitles' / 'ko.srt').read_text()
+    assert 'LED는 빛을 냅니다.' in srt and '엘이디는 빛을 냅니다.' in srt   # scene 2 has no display text and keeps the narration
+    assert srt.count('전류가 흐릅니다.') == 2
+    assert json.loads((tmp_path / 'subtitle-gate-ko.json').read_text())['status'] == 'passed'
+
+
+def test_subtitle_overrides_file_wins_for_approved_runs_and_must_match_sentence_count(tmp_path):
+    _korean_run(tmp_path, narration='엘이디는 빛을 냅니다. 전류가 흐릅니다.', subtitle_text=['LED는 빛을 냅니다.', '전류가 흐릅니다.'])
+    (tmp_path / 'subtitle-overrides.json').write_text(json.dumps({'ko': {'1': ['LED가 빛을 냅니다.', '전류가 흐릅니다.']}}, ensure_ascii=False))
+    st.write_subtitles(tmp_path, 'ko', quality='draft', width=384, height=216, output_fps=10)
+    srt = (tmp_path / 'subtitles' / 'ko.srt').read_text()
+    assert 'LED가 빛을 냅니다.' in srt and 'LED는 빛을 냅니다.' not in srt
+    (tmp_path / 'subtitle-overrides.json').write_text(json.dumps({'ko': {'2': ['한 문장만.']}}, ensure_ascii=False))
+    with pytest.raises(ValueError, match='subtitle_text_count'):
+        st.write_subtitles(tmp_path, 'ko', quality='draft', width=384, height=216, output_fps=10)
+    gate = json.loads((tmp_path / 'subtitle-gate-ko.json').read_text())
+    assert gate['status'] == 'failed' and any(e.startswith('subtitle_text_count') for e in gate['issues'])

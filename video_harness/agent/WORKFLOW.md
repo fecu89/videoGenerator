@@ -150,6 +150,12 @@ PDF 입력은 원문과 페이지의 표, 도표, 사진, 배치를 함께 검�
 삽입하지 않는다. 이는 감정 연기와 별개이며 대본 웹에 지정 위치를 함께 보여준다.
 사용자가 쉼 위치를 고치면 메타데이터를 반영하고 새 음성의 자연스러움을 확인한다.
 
+자막은 나레이션 문장을 그대로 쓰되, 장면의 `subtitle_text`가 있으면 그 표시
+문장을 쓴다(읽기 표기 `엘이디` → 화면 `LED`). 문장 수가 나레이션과 다르면
+`subtitle-gate-ko.json`이 `subtitle_text_count`로 막는다. 승인 뒤에는 `script.json`을
+고치지 않고 실행 폴더의 `subtitle-overrides.json`에 언어별·장면별 표시 문장을
+적은 뒤 자막·완성본·쇼츠를 다시 만든다. 쇼츠 자막은 본편 자막을 그대로 쓴다.
+
 전체 대본의 [문장별 연기](../docs/voice-acting.md)는 effective settings로 결정한다.
 `voice.emotion_mode=off`이면 `sentence_delivery`를 생략하거나 `[]`로 두고,
 승인용 대화·`story-review.md`에는 읽을 대사만 제시한다. `[호기심 · 중간]` 같은
