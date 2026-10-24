@@ -30,8 +30,8 @@
     "loudness_true_peak_db": -1.5,
     "max_internal_pause_ms": 120,
     "pause_mode": "typed",
-    "comma_pause_ms": 120,
-    "semantic_pause_ms": 200,
+    "comma_pause_ms": 150,
+    "semantic_pause_ms": 210,
     "emphasis_pause_ms": 350,
     "sentence_pause_ms": 500,
     "sentence_leading_margin_ms": 50,
@@ -67,7 +67,7 @@
     "duration_tolerance_seconds": 0.05
   },
   "music": {
-    "file": "Curious Motion.mp3",
+    "file": "Orbital Drift.mp3",
     "gain_db": -6.5,
     "duck_db": -11.0,
     "fade_seconds": 1.0,

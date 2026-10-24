@@ -21,6 +21,10 @@
 대본 단계에서는 질문 사슬과 밝은 첫 전달을, 화면 단계에서는 큰 이미지·수식,
 대상과 글자의 영역 분리, 배경판·하단 보조 문구 제거를 확인한다.
 
+대본 작성·편집 전에는 [대본의 흐름과 말투](STORY_STYLE.md)도 읽는다.
+사용자 원문의 문장 호흡·어미·짧은 반응을 보존하고 사실 오류는 최소 범위로 고친다.
+이 문서의 선호 문구를 그대로 반복하거나 음성 설정을 바꾸지 않는다.
+
 ## 0. 설정 확인
 
 새 실행을 시작하기 전에 `videoGenerator/settings.md`를 읽고 설정 화면을 연다.
@@ -137,6 +141,9 @@ PDF 입력은 원문과 페이지의 표, 도표, 사진, 배치를 함께 검�
 본편·쇼츠 각각 제목이 약속한 질문, 직접 답하는 문장/씬, 필요한 전제와 결말을
 기록한다. 제목 변경 뒤에도 실제 적용되는 override를 포함해 다시 대조한다.
 검토 결과는 [양식](templates/release-review.md)을 복사한 `release-review.md`에 남긴다.
+같은 기록에서 원문 말투를 보존한 예와 사실상 고쳐야 했던 부분도 짧게 검토한다.
+원문이 없는 새 대본은 `STORY_STYLE.md`의 흐름·호흡을 적용했는지 확인한다.
+이는 에이전트의 편집 검토이며 별도 사용자 승인이나 자동 말투 게이트를 추가하지 않는다.
 
 ```bash
 /opt/homebrew/opt/python@3.13/libexec/bin/python3 -c "from pathlib import Path; from video_harness.models import ScriptArtifact; ScriptArtifact.model_validate_json(Path('runs/<run>/script.json').read_text()); print('script.json OK')"
