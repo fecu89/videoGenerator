@@ -61,6 +61,8 @@ def approve_video_plan(run_dir: Path, *, source: Literal['human', 'automatic_val
     from .pipeline import load_pipeline_context
 
     run_root = run_dir.resolve()
+    from .voice_pause_qa import require_pause_gate
+    require_pause_gate(run_root)
     from .creative_gates import require_creative_plan, require_text_plan
     require_creative_plan(run_root)
     require_text_plan(run_root)
@@ -105,6 +107,8 @@ def prepare_video_plan(run_dir: Path) -> VideoPlanApproval:
 
 def require_current_video_plan_approval(run_dir: Path) -> VideoPlanApproval:
     run_root = run_dir.resolve()
+    from .voice_pause_qa import require_pause_gate
+    require_pause_gate(run_root)
     approval_path = run_root / APPROVAL_FILENAME
     if not approval_path.is_file():
         raise ValueError(

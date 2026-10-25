@@ -642,6 +642,8 @@ def render_sequence_quality(
 ) -> SequenceRenderReport:
     if quality not in {"draft", "final"}:
         raise ValueError("quality must be draft or final")
+    from .voice_pause_qa import require_pause_gate
+    require_pause_gate(run_dir)
     from .creative_gates import require_creative_plan
     require_creative_plan(run_dir)
     store = RunStore.open(run_dir)

@@ -1501,6 +1501,9 @@ def validate_run(
     if script is None:
         return issues
 
+    from .voice_pause_qa import gate_issues
+    issues.extend(ValidationIssue('voice_pause_gate_failed', issue) for issue in gate_issues(run_dir, script))
+
     audio_dir = run_dir / "audioFiles"
     prompt_dir = run_dir / "videoPrompt"
     expected_audio: set[str] = set()

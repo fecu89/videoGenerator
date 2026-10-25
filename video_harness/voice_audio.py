@@ -156,6 +156,7 @@ class SentenceGeneration:
     target_reached: bool = True
     output_seconds: float = 0.0
     pause_events: tuple[dict[str, object], ...] = ()
+    phrase_spans: tuple[dict[str, object], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -317,6 +318,8 @@ class AudioSynthesizer:
         scene_target_seconds: Mapping[int, float] | None = None,
     ):
         self.settings = settings
+        # Set by the run's voice-pause-policy, independently of archived settings.
+        self.pause_policy = None
         # Translated languages fit each scene into the Korean master's slot.
         self.scene_target_seconds = scene_target_seconds
         self.runtime_loader = runtime_loader
@@ -700,6 +703,14 @@ class AudioSynthesizer:
                     ),
                 )
 
+            if self.pause_policy is not None:
+                from .voice_pause_qa import check_scene
+                for scene in ordered:
+                    path, _duration, generation = staged[scene.scene_id]
+                    check = check_scene(path, dataclasses.asdict(generation), scene.narration, self.pause_policy,
+                                        sentence_pauses=scene.sentence_pauses)
+                    if check['status'] != 'passed':
+                        raise RuntimeError(f'voice_pause_gate_failed: scene {scene.scene_id}: {check["issues"]}')
             self._publish_atomically(
                 {scene_id: values[0] for scene_id, values in staged.items()},
                 destinations,

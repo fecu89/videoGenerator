@@ -114,6 +114,19 @@ Qwen은 `instructions_file`의 Sohee 톤 지시에 승인된 문장별 감정 �
 `emotion_mode=off`이면 전체 톤만 적용한다. `script_only`에서는 모든 문장의
 지시를 요구하며 실제 지시를 생성 보고서에 남긴다. [작성·검토 절차](voice-acting.md)를 따른다.
 
+### 음성 쉼 게이트
+
+`voice_pause_qa.py`는 추가 모델 없이 10ms RMS 창과 이미 알려진 합성 구절
+경계를 사용한다. 검사 상한은 effective voice/QA 설정에서 읽고 구절별 실제
+배율을 반영한다. Qwen/Kokoro의 원본 후보를 무음 보정 전에 검사하고 실제
+인코딩된 MP3를 다시 검사한다. `voice-pause-policy.json`은 설정 스냅샷과
+분리된 실행별 검사 정책이다. 새 `typed` 합성에서 생성하며 과거 실행은
+명시적 `check-voice` 전까지 편입하지 않는다. 성공 게이트는 한국어 음성
+게시 트랜잭션에 포함되고, 실패하면 기존 음성을 보존한다. 계획 검증·프리뷰·
+제작은 현재 음성/대본/생성 보고서 해시와 게이트의 일치를 요구한다. 추가
+언어는 언어별 게이트와 다국어 합본 사전 검사에 연결한다.
+검사 기준·실패 처리·판정 한계는 [쉼 검증](voice-pause-qa.md)에 둔다.
+
 ### 설치 캐시
 
 - `.render-tools/playwright`는 임시로 프로젝트 안에 설치했던 Chromium 및

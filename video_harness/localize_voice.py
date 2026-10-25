@@ -114,7 +114,7 @@ def _scene_entry(result: AudioResult, target: float, relative_audio: str) -> dic
             # also holds the model's own silence and drifts cues away from speech.
             {"text": sentence.text, "sample_count": sentence.sample_count, "tempo_factor": sentence.tempo_factor,
              "output_seconds": sentence.output_seconds, "adjusted_speech_seconds": sentence.adjusted_speech_seconds,
-             "pause_events": list(sentence.pause_events)}
+             "pause_events": list(sentence.pause_events), "phrase_spans": list(sentence.phrase_spans)}
             for sentence in generation.sentences
         ],
     }
@@ -131,6 +131,8 @@ def generate_language_audio(
     synthesizer=None,
 ) -> LanguageVoiceReport:
     run = Path(run_dir).resolve()
+    from .voice_pause_qa import load_policy, invalidate_gate, check_run, gate_issues
+    pause_policy = load_policy(run, settings=settings, refresh=True)
     if lang not in subtitle_language_list(settings):
         raise ValueError(f"{lang}는 local_video.subtitle_languages에 없는 언어입니다.")
     require_translations(run)
@@ -152,6 +154,9 @@ def generate_language_audio(
         synthesizer = factory(lang, voice, settings, targets)
     elif hasattr(synthesizer, "configure"):
         synthesizer.configure(voice=voice.voice, lang_code=voice.lang_code, scene_target_seconds=targets)
+    if pause_policy is not None:
+        invalidate_gate(run, lang=lang)
+        synthesizer.pause_policy = pause_policy
     errors: list[str] = []
     results: list[AudioResult] = []
     try:
@@ -165,6 +170,8 @@ def generate_language_audio(
                 errors.append(f"scene_too_long: {error.scene_id} ×{error.ratio:.3f} > {getattr(error, 'limit', 1.25):.2f}{detail} — shorten the {lang} translation")
     except Exception as error:
         # A model/ffmpeg failure must not leave an older "passed" gate on disk.
+        if pause_policy is not None:
+            invalidate_gate(run, lang=lang, reason=f'{type(error).__name__}: {error}')
         atomic_write(run / fit_gate_name(lang), json.dumps({"schema_version": 1, "status": "failed", "language": lang,
             "issues": [f"synthesis_error: {lang} {type(error).__name__}: {error}"]}, ensure_ascii=False, indent=2) + "\n")
         raise
@@ -202,6 +209,9 @@ def generate_language_audio(
             "scenes": [existing[scene_id] for scene_id in sorted(existing)],
         }
         atomic_write(run / report_name(lang), json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
+    if pause_policy is not None:
+        check_run(run, lang=lang, scene_ids=scene_ids)
+        errors.extend(gate_issues(run, lang=lang))
     _named_gate(run, fit_gate_name(lang), errors, language=lang)
     return LanguageVoiceReport(lang, run / report_name(lang), {r.scene_id: r.path.relative_to(run).as_posix() for r in results})
 
@@ -218,6 +228,8 @@ def language_audio_issues(run_dir: Path, lang: str) -> list[str]:
     """Is the language's audio current for this run? Used before any localized assembly."""
     run = Path(run_dir).resolve()
     issues: list[str] = []
+    from .voice_pause_qa import gate_issues
+    issues.extend(gate_issues(run, lang=lang))
     gate = run / fit_gate_name(lang)
     status = json.loads(gate.read_text(encoding="utf-8")).get("status") if gate.is_file() else None
     if status != "passed":

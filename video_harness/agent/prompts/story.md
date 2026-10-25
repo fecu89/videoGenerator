@@ -427,6 +427,10 @@ effective settings의 `voice.min_scene_seconds`~`voice.max_scene_seconds`를
 - `title`: 파일명에 사용할 2~12자의 짧은 제목
 - `narration`: 한국어 나레이션
 - `sentence_delivery`: 위의 현재 음성 설정 규칙에 따라 생략·빈 배열 또는 문장별 연기 지시
+- `sentence_pauses`: `typed` 모드에서 의미 구분·강조가 필요한 경계만 지정한다.
+  `두 번째 준위`·수치와 단위 등 붙여 읽을 묶음 안에 경계를 넣지 않는다.
+  생성 후 실제 파형의 쉼은 `docs/voice-pause-qa.md`의 게이트로 검사한다.
+  전사문이 같다는 이유로 자연스러운 쉼까지 검증했다고 보고하지 않는다.
 - `narrative_role`: HOOK, QUESTION, ANSWER, NEW_QUESTION, TWIST, CONSTRAINT, REVEAL, MECHANISM, PROOF, RESULT, PAYOFF, ENDING 가운데 가장 가까운 역할
 - `visual_subject`: 화면에서 반드시 보여줄 구체적 대상이나 관계
 - `source_ids`: 나레이션을 뒷받침하는 출처 ID

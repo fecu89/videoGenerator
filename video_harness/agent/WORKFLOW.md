@@ -88,6 +88,8 @@ script.json
 story-review.md
 duration-report.json
 voice-generation-report.json
+voice-pause-policy.json
+voice-pause-gate.json
 production-plan.json
 local-sequence-plan.json
 online-plan.json
@@ -156,6 +158,9 @@ PDF 입력은 원문과 페이지의 표, 도표, 사진, 배치를 함께 검�
 `sentence_pauses`에 문장 번호·구절·종류로 지정한다. 읽을 본문에는 쉼 지시를
 삽입하지 않는다. 이는 감정 연기와 별개이며 대본 웹에 지정 위치를 함께 보여준다.
 사용자가 쉼 위치를 고치면 메타데이터를 반영하고 새 음성의 자연스러움을 확인한다.
+`두 번째 준위`처럼 붙여 읽을 표현 안에는 쉼 경계를 넣지 않는다.
+승인된 `sentence_pauses`나 문장부호를 고치는 경우에도 변경된 대본을 다시
+보여주고 기존 대본 승인 절차를 따른다.
 
 자막은 나레이션 문장을 그대로 쓰되, 장면의 `subtitle_text`가 있으면 그 표시
 문장을 쓴다(읽기 표기 `엘이디` → 화면 `LED`). 문장 수가 나레이션과 다르면
@@ -204,11 +209,33 @@ Sohee 톤 프리셋·토큰 예산·목표 속도·최소 배율 검사를 사�
 목표 속도에서 계산한 배율과 `speaking_rate` 중 큰 값을 적용하므로, 기본 최소
 배율 1.0에서는 이미 빠른 발화를 감속하지 않는다. `max_tempo_factor` 초과는
 재시도 후 실패한다. 내부 무음 상한과 전체 씬 길이 검사는 유지한다.
+새 `typed` 음성은 [쉼 검증](../docs/voice-pause-qa.md)도 자동 적용한다.
+검사값은 현재 실행의 `voice.max_internal_pause_ms`, 종류별 쉼·문장 여백,
+QA 허용 오차에서 읽고, 인코딩 후에는 각 구절에 실제 적용된 배율을 반영한다.
+별도의 고정 시간 기준으로 설정된 쉼을 실패시키거나 축소하지 않는다.
+무음 축소 전 원본 구절의 미지정 쉼을 검사하고, 인코딩된 실제 MP3에서
+계획된 쉼과 문장 여백의 위치·길이를 대조한다. 같은 전사문이어도 잘못 끊어
+읽는 후보는 실패한다. Qwen은 기존 후보 예산 안에서 재시도하며 대본·화자·
+톤을 바꾸지 않는다. 게이트 실패를 무음 자르기로 숨기지 않는다.
 전체 예상 길이가 씬 최대 길이의 97.5%를 넘거나 후보가 모두 실패하면 게시하지 않는다.
 모든 선택 씬의 길이가 유효할 때만 MP3,
-sidecar, 대본, 길이 보고서, `voice-generation-report.json`을 한 트랜잭션으로
+sidecar, 대본, 길이 보고서, `voice-generation-report.json`, 적용된 경우
+`voice-pause-gate.json`을 한 트랜잭션으로
 게시한다. 생성된 각 MP3 옆에는 같은 이름의 `.txt` 대본 파일을 원본 나레이션
 그대로 남긴다.
+
+`voice-pause-policy.json`이 있는 실행은 게이트의 실제 MP3·생성 보고서·대본
+해시가 현재와 일치해야 계획·프리뷰·제작을 진행한다. 기존 실행은 자동
+재검사·설정 갱신·재합성하지 않는다. 명시적 점검은 다음 명령으로 수행하며
+그 실행을 게이트 대상에 편입한다. 발음·음색·억양·직접 청취는 별도 항목이다.
+
+```bash
+python -m video_harness check-voice runs/<run>
+```
+
+실패 시 보고서의 장면·문장·MP3 시점을 확인하고 필요한 장면만 재생성한다.
+보고서/정책 삭제·임계값 자동 완화로 우회하지 않는다. 실제 검토 방법과
+남은 제한은 `release-review.md`에 남긴다.
 
 전체 씬 최초 생성:
 
@@ -275,7 +302,12 @@ python -m video_harness voice runs/<run>/script.json --target-language all
 단일 배율(≤1.25)로 보정되고, 짧으면 타임라인 무음이 채운다. 넘치는 장면은
 `scene_too_long`으로 실패하며 그 언어 번역을 줄여 `--target-language <lang>
 --scenes N --force`로 다시 만든다. 한국어 마스터 파일은 바뀌지 않는다. 다른
-언어 음성은 존재·길이·무음·클리핑만 자동 검사하며 청취 검토는 한국어만 한다.
+언어 음성은 존재·길이·무음·클리핑과 편입된 실행의 쉼 게이트를 자동 검사하며
+청취 검토는 한국어만 한다. `voice-pause-gate-<lang>.json`이 실패하거나 오래되면
+그 언어의 합본을 막는다. 명시적 재검사는 `check-voice runs/<run> --language ja`
+처럼 실행한다. Kokoro의 같은 입력 합성은 결정적이므로 부자연스러운 쉼은
+실패로 보고하고 원인을 검토한다. 언어별 쉼의 의미·억양을 자동 검증했다고
+보고하지 않는다.
 
 초본·최종 제작의 다국어 산출물은 `local_video.localized_delivery`에 따른다.
 현재 프로젝트 기본값 `video_and_audio`는 한국어 MP4와 추가 언어 M4A를 만든다.

@@ -244,6 +244,13 @@ class MLXAudioSynthesizer(AudioSynthesizer):
                 hard_token_limit = expanded
                 continue
             quality_attempts += 1
+            from .voice_pause_qa import raw_pause_rejection
+            rejection = raw_pause_rejection(audio, sample_rate, self.pause_policy)
+            if rejection:
+                # Inspect the unmodified candidate. Trimming a wrong pause must
+                # never turn a failed delivery into a reported quality pass.
+                last_rejection = rejection
+                continue
             original_pause_ms = longest_internal_silence_ms(
                 audio,
                 sample_rate=sample_rate,

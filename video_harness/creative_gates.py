@@ -417,6 +417,8 @@ def main(argv=None):
 
 
 def require_legacy_render_gate(run, quality):
+    from .voice_pause_qa import require_pause_gate
+    require_pause_gate(run)
     require_story_chain(run)
     if quality=='final':
         raise ValueError('Final publication requires produce with story and 3D continuity gates. Migrate legacy plans before production.')

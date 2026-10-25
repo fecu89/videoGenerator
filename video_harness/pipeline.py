@@ -100,6 +100,8 @@ def load_pipeline_context(run_dir: Path) -> PipelineContext:
 def validate_pipeline_inputs(context: PipelineContext, settings: HarnessSettings) -> list[str]:
     """Validate authored input media without requiring any published output."""
     issues: list[str] = []
+    from .voice_pause_qa import gate_issues
+    issues.extend(gate_issues(context.run_dir, context.script))
     from .render_sources import run_plan_source_issues
     issues.extend(run_plan_source_issues(context.run_dir, context.local))
     for scene in context.script.scenes:

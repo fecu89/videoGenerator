@@ -113,6 +113,12 @@ class KokoroSynthesizer(AudioSynthesizer):
         audio = runtime.concatenate(chunks)
         if getattr(audio, "ndim", 1) != 1 or len(audio) == 0 or not runtime.all_finite(audio):
             raise RuntimeError(f"Kokoro returned invalid audio for scene {scene_id} sentence {sentence_index}")
+        from .voice_pause_qa import raw_pause_rejection
+        rejection = raw_pause_rejection(audio, sample_rate, self.pause_policy)
+        if rejection:
+            # Kokoro is deterministic for the same input/preset; repeating it
+            # cannot repair delivery. Keep the failure visible to the agent.
+            raise RuntimeError(f'scene {scene_id} sentence {sentence_index}: {rejection}')
         original_pause_ms = longest_internal_silence_ms(audio, sample_rate=sample_rate)
         if original_pause_ms > self.settings.max_internal_pause_ms:
             audio = cap_internal_silence(audio, sample_rate=sample_rate, max_pause_ms=self.settings.max_internal_pause_ms)

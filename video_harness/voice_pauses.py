@@ -60,9 +60,12 @@ def aggregate_sentence_reports(sentences, reports, sentence_ids, kinds, trailing
     for index, sentence in enumerate(sentences):
         selected = [i for i, owner in enumerate(sentence_ids) if owner == index]
         group = [reports[i] for i in selected]
-        events = []; cursor = 0.0
+        events = []; spans = []; cursor = 0.0
         for i in selected:
             report = reports[i]
+            spans.append({'start_seconds': cursor,
+                          'end_seconds': cursor + report.output_seconds - trailing_ms[i]/1000,
+                          'tempo_factor': report.tempo_factor, 'text': report.text})
             if kinds[i] != 'sentence':
                 events.append({'kind': kinds[i], 'duration_ms': trailing_ms[i],
                                'start_seconds': cursor + report.output_seconds - trailing_ms[i] / 1000})
@@ -82,5 +85,5 @@ def aggregate_sentence_reports(sentences, reports, sentence_ids, kinds, trailing
             original_longest_internal_pause_ms=max(r.original_longest_internal_pause_ms for r in group),
             longest_internal_pause_ms=max([r.longest_internal_pause_ms for r in group] +
                                           [e['duration_ms'] for e in events]),
-            pause_events=tuple(events)))
+            pause_events=tuple(events), phrase_spans=tuple(spans)))
     return aggregated

@@ -18,6 +18,7 @@ COMMANDS: dict[str, Callable[[Sequence[str] | None], int]] = {
     "check-creative": _command("creative_gates", "main"),
     "blender": _command("blender_backend", "main"),
     "voice": _command("voice", "main"),
+    "check-voice": _command("voice_pause_qa", "main"),
     "validate": _command("validation", "main"),
     "render": _command("render", "main"),
     "migrate-production": _command("migration", "migration_main"),

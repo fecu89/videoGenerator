@@ -60,6 +60,8 @@ TEMPLATE_RELATIONSHIP = {
 
 
 def _require_audio_ready(run_dir: Path, script: ScriptArtifact) -> None:
+    from .voice_pause_qa import require_pause_gate
+    require_pause_gate(run_dir)
     for scene in script.scenes:
         if scene.duration_seconds is None:
             raise ValueError(f"scene {scene.scene_id} duration_seconds is required")

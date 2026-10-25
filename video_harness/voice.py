@@ -378,6 +378,7 @@ def generate_audio(
     synthesizer: SceneSynthesizer | None = None,
     duration_reader: Callable[[Path], float] = read_mp3_duration,
     settings: ResolvedHarnessSettings | None = None,
+    pause_policy=None,
 ) -> DurationReport:
     if settings is None:
         from .settings import HarnessSettings
@@ -391,6 +392,15 @@ def generate_audio(
             f"python -m video_harness settings {script_path.parent} --refresh-settings"
         )
     script_path = script_path.resolve()
+    from .voice_pause_qa import load_policy, POLICY_NAME
+    current_policy = load_policy(script_path.parent,
+        create=pause_policy is None and getattr(settings.voice, 'pause_mode', 'legacy') == 'typed',
+        settings=settings, refresh=True)
+    pause_policy = pause_policy or current_policy
+    if pause_policy is not None and current_policy is None:
+        atomic_write(script_path.parent / POLICY_NAME, pause_policy.model_dump_json(indent=2) + '\n')
+    elif pause_policy is not None and current_policy != pause_policy:
+        raise ValueError('pause_policy differs from the run voice-pause-policy.json')
     script = ScriptArtifact.model_validate_json(script_path.read_text(encoding="utf-8"))
     known_ids = {scene.scene_id for scene in script.scenes}
     requested_ids = scene_ids or known_ids
@@ -419,6 +429,10 @@ def generate_audio(
         settings.voice,
         duration_reader=duration_reader,
     )
+    if pause_policy is not None:
+        from .voice_pause_qa import invalidate_gate
+        invalidate_gate(script_path.parent)
+        active_synthesizer.pause_policy = pause_policy
     with tempfile.TemporaryDirectory(
         prefix=".voice-stage-",
         dir=script_path.parent,
@@ -432,6 +446,11 @@ def generate_audio(
                 active_synthesizer,
                 force=False,
             )
+        except BaseException as error:
+            if pause_policy is not None:
+                from .voice_pause_qa import invalidate_gate
+                invalidate_gate(script_path.parent, reason=f'{type(error).__name__}: {error}')
+            raise
         finally:
             # An injected synthesizer may be shared across scene checkpoints;
             # its caller owns the lifetime. CLI-created models end with this job.
@@ -490,6 +509,18 @@ def generate_audio(
             results,
             settings,
         )
+        if pause_policy is not None:
+            from .voice_pause_qa import build_gate, gate_name
+            pause_gate = build_gate(script_path.parent, updated_script,
+                {s['scene_id']: s for s in generation_report['scenes']}, {}, pause_policy,
+                scene_ids=requested_ids, audio_overrides=audio_overrides)
+            failed = [s for s in pause_gate['scenes'] if s['scene_id'] in requested_ids and s['status'] != 'passed']
+            if pause_gate['issues'] or failed:
+                atomic_write(script_path.parent / gate_name(), json.dumps(pause_gate, ensure_ascii=False, indent=2) + '\n')
+                raise RuntimeError(f'voice_pause_gate_failed: {json.dumps(failed or pause_gate["issues"], ensure_ascii=False)}')
+            staged_pause_gate = stage_root / gate_name()
+            atomic_write(staged_pause_gate, json.dumps(pause_gate, ensure_ascii=False, indent=2) + '\n')
+            publications[staged_pause_gate] = script_path.parent / gate_name()
         atomic_write(
             staged_generation_report,
             json.dumps(generation_report, ensure_ascii=False, indent=2) + "\n",
@@ -577,6 +608,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             },
             persist=True,
         )
+        from .voice_pause_qa import load_policy
+        # Archived snapshots stay byte-identical; this is a separate run artifact.
+        pause_policy = load_policy(args.script.parent, create=getattr(settings.voice, 'pause_mode', 'legacy') == 'typed',
+                                   settings=settings, refresh=True)
         if args.target_language:
             from .localize_voice import generate_all_languages, generate_language_audio
             if args.target_language == "all":
@@ -592,6 +627,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             scene_ids=args.scenes,
             force=args.force,
             settings=settings,
+            pause_policy=pause_policy,
         )
     except SceneDurationError as error:
         report = error.report
